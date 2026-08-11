@@ -70,6 +70,9 @@ tr.total td{font-weight:800;background:var(--sand);border-top:2px solid var(--oc
 .pgrid .daycell{width:36px;min-width:36px;height:38px;display:flex;align-items:center;justify-content:center;cursor:pointer;user-select:none}
 .pgrid .daycell .dot{width:22px;height:22px;border-radius:7px;background:var(--sand-dark);transition:background .1s}
 .pgrid .daycell.on .dot{background:var(--ocean);box-shadow:inset 0 0 0 2px rgba(255,255,255,.35)}
+.pgrid .daycell.inesd.on .dot{background:var(--warn)}
+.pgrid tr.inesrow td{background:#fdf6e9}
+.pgrid tr.inesrow td.name{background:#fdf6e9;font-weight:700}
 .pgrid th.day{padding:6px 2px;text-align:center;min-width:36px}
 .pgrid th.day .dn{font-size:13px;font-weight:800;color:var(--ink);display:block}
 .pgrid th.day .dw{font-size:9px;display:block}
@@ -163,7 +166,7 @@ nav.tabs button.active{color:var(--ocean)}
   <section id="tab-presencia" class="hidden">
     <div class="card">
       <h2>Entrada y salida</h2>
-      <p class="muted" style="margin-bottom:10px">Marca desde qué día hasta qué día estuvo cada persona. También puedes tocar los cuadritos de la tabla para ajustar días sueltos.</p>
+      <p class="muted" style="margin-bottom:10px">Marca desde qué día hasta qué día estuvo cada persona. ¿Se va y vuelve? Marca cada estadía por separado y se suman; con "Quitar esos días" borras los días de en medio. También puedes tocar los cuadritos de la tabla para días sueltos.</p>
       <div class="row">
         <div class="field"><label>Persona</label><select id="stayPerson"></select></div>
         <div class="field"><label>Entra</label><input type="date" id="stayFrom"></div>
@@ -236,8 +239,16 @@ nav.tabs button.active{color:var(--ocean)}
         <div class="field"><label>Hasta</label><input type="date" id="cfgEnd"></div>
         <div class="field"><label>Inés $/día</label><input type="number" id="cfgRate" step="0.5" inputmode="decimal"></div>
       </div>
-      <div class="row" style="margin-top:10px"><button onclick="saveConfig()">Guardar período</button></div>
-      <p class="muted" style="margin-top:8px">El costo de Inés se cobra cada día que haya al menos una persona en la casa, dividido entre los presentes de ese día.</p>
+      <div class="row" style="margin-top:10px">
+        <div class="field" style="flex:2"><label>Días de Inés</label>
+          <select id="cfgInesMode">
+            <option value="auto">Viene todos los días (que haya gente)</option>
+            <option value="manual">Marco sus días en el calendario</option>
+          </select>
+        </div>
+        <button onclick="saveConfig()">Guardar período</button>
+      </div>
+      <p class="muted" style="margin-top:8px">El costo de Inés se divide entre los presentes de cada día que ella viene. Si eliges "marco sus días", aparece una fila de Inés en el calendario de Presencia para marcar qué días trabaja.</p>
     </div>
     <div class="card">
       <h2>Personas</h2>
@@ -390,16 +401,22 @@ function compute(){
   // gastos "entre todos": se reparten por día entre los presentes (método del Excel)
   const pooled = exps.filter(e => !Array.isArray(e.split)).reduce((s,e) => s + Number(e.amount||0), 0);
   const dailyGasto = activeDays.length ? pooled / activeDays.length : 0;
-  const totalInes = activeDays.length * rate;
+  // días de Inés: todos los días con gente (auto) o solo los marcados en su fila (manual)
+  const inesManual = (state.config && state.config.inesMode) === 'manual';
+  const isInesDay = d => inesManual ? !!(state.ines && state.ines[d]) : countByDay[d] > 0;
+  const inesDays = days.filter(d => isInesDay(d) && countByDay[d] > 0);
+  const inesOrphans = inesManual ? days.filter(d => isInesDay(d) && countByDay[d] === 0).length : 0;
+  const totalInes = inesDays.length * rate;
 
   const per = {};
   people.forEach(p => per[p.id] = {name:p.name, days:0, ines:0, gastos:0, paid:0, net:0});
   days.forEach(d => {
     const n = countByDay[d]; if(!n) return;
+    const chargeInes = isInesDay(d);
     people.forEach(p => {
       if(isPresent(p.id, d)){
         per[p.id].days++;
-        per[p.id].ines += rate / n;
+        if(chargeInes) per[p.id].ines += rate / n;
         per[p.id].gastos += dailyGasto / n;
       }
     });
@@ -426,23 +443,25 @@ function compute(){
   });
   people.forEach(p => { const x = per[p.id]; x.net = x.paid - (x.ines + x.gastos); });
   const inesPending = Math.max(0, totalInes - inesPaid);
-  return {days, people, rate, countByDay, activeDays, totalGastos, dailyGasto, totalInes, per, inesPaid, inesPending, sinPagador};
+  return {days, people, rate, countByDay, activeDays, totalGastos, dailyGasto, totalInes, per, inesPaid, inesPending, sinPagador, inesManual, isInesDay, inesDays, inesOrphans};
 }
 /* plan de transferencias para saldar (los que deben → los que pusieron de más, e Inés) */
 function settlementPlan(r){
   const debtors = [], creditors = [];
-  if(r.inesPending > 0.005) creditors.push({name:'Inés', ines:true, amt:r.inesPending});
+  if(r.inesPending > 0.005) creditors.push({name:'Inés', ines:true, amt:r.inesPending, pri:2});
+  if(r.sinPagador > 0.005) creditors.push({name:'Gastos pendientes', pend:true, amt:r.sinPagador, pri:1});
   r.people.forEach(p => {
     const n = r.per[p.id].net;
     if(n < -0.005) debtors.push({name:p.name, amt:-n});
-    else if(n > 0.005) creditors.push({name:p.name, amt:n});
+    else if(n > 0.005) creditors.push({name:p.name, amt:n, pri:0});
   });
-  debtors.sort((a,b) => b.amt - a.amt); creditors.sort((a,b) => (b.ines?1e9:b.amt) - (a.ines?1e9:a.amt));
+  debtors.sort((a,b) => b.amt - a.amt);
+  creditors.sort((a,b) => (b.pri - a.pri) || (b.amt - a.amt));
   const plan = [];
   let i = 0, j = 0;
   while(i < debtors.length && j < creditors.length){
     const x = Math.min(debtors[i].amt, creditors[j].amt);
-    if(x > 0.005) plan.push({from:debtors[i].name, to:creditors[j].name, ines:!!creditors[j].ines, amount:x});
+    if(x > 0.005) plan.push({from:debtors[i].name, to:creditors[j].name, ines:!!creditors[j].ines, pend:!!creditors[j].pend, amount:x});
     debtors[i].amt -= x; creditors[j].amt -= x;
     if(debtors[i].amt < 0.005) i++;
     if(creditors[j].amt < 0.005) j++;
@@ -490,8 +509,9 @@ function renderResumen(){
   wrap.innerHTML = html;
   let notes =
     `<b>Le toca</b> = su parte de Inés + su parte de los gastos. <b>Ya puso</b> = gastos que pagó + transferencias hechas.<br>` +
-    `Gastos entre todos: ${money(r.dailyGasto)}/día dividido entre los presentes de cada día. Inés: ${money(r.rate)}/día dividido entre los presentes.`;
-  if(r.sinPagador > 0.005) notes += `<br>Hay ${money(r.sinPagador)} en gastos antiguos sin pagador registrado.`;
+    `Gastos entre todos: ${money(r.dailyGasto)}/día dividido entre los presentes de cada día. Inés: ${money(r.rate)}/día × ${r.inesDays.length} días${r.inesManual ? ' (los marcados en su fila del calendario)' : ''}, dividido entre los presentes de cada día.`;
+  if(r.inesOrphans > 0) notes += `<br><b style="color:var(--warn)">Ojo:</b> Inés tiene ${r.inesOrphans} día(s) marcados en los que no hay nadie en la casa — esos días no se están cobrando a nadie. Revisa el calendario.`;
+  if(r.sinPagador > 0.005) notes += `<br><b style="color:var(--warn)">Hay ${money(r.sinPagador)} en gastos pendientes por pagar</b> (ya están divididos entre todos; cuando alguien los pague, márcalo en Gastos).`;
   document.getElementById('summaryNotes').innerHTML = notes;
   // plan de transferencias
   const plan = settlementPlan(r);
@@ -499,11 +519,14 @@ function renderResumen(){
   if(!plan.length){
     box.innerHTML = '<div class="empty">Todo está saldado. No hace falta ninguna transferencia.</div>';
   } else {
-    box.innerHTML = plan.map(t =>
-      `<div class="list-item"><div class="main"><div class="t">${esc(t.from)} &nbsp;→&nbsp; ${esc(t.to)}${t.ines ? ' <span class="muted">(su pago del período)</span>' : ''}</div></div>` +
-      `<div class="amt">${money(t.amount)}</div></div>`
-    ).join('') +
-    `<p class="muted" style="margin-top:10px">Con estas transferencias todos quedan al día. Cuando se hagan de verdad, regístralas en la pestaña <b>Pagos</b> y los saldos se pondrán en cero solos.</p>`;
+    box.innerHTML = plan.map(t => {
+      let extra = '';
+      if(t.ines) extra = ' <span class="muted">(su pago del período)</span>';
+      if(t.pend) extra = ' <span class="muted">(cubrir propinas y gastos por pagar)</span>';
+      return `<div class="list-item"><div class="main"><div class="t">${esc(t.from)} &nbsp;→&nbsp; ${esc(t.to)}${extra}</div></div>` +
+      `<div class="amt">${money(t.amount)}</div></div>`;
+    }).join('') +
+    `<p class="muted" style="margin-top:10px">Con esto todos quedan al día. Las transferencias entre personas se registran en <b>Pagos</b>; si alguien cubre un gasto pendiente, márcalo como pagado en <b>Gastos</b>.</p>`;
   }
 }
 function stat(v,l){ return `<div class="stat"><div class="v">${v}</div><div class="l">${l}</div></div>`; }
@@ -512,7 +535,8 @@ function renderPresencia(){
   const r = compute();
   const sel = document.getElementById('stayPerson');
   const cur = sel.value;
-  sel.innerHTML = r.people.map(p => `<option value="${p.id}">${esc(p.name)}</option>`).join('');
+  sel.innerHTML = r.people.map(p => `<option value="${p.id}">${esc(p.name)}</option>`).join('') +
+    (r.inesManual ? `<option value="__ines">Inés (sus días de trabajo)</option>` : '');
   if(cur) sel.value = cur;
   const c = state.config || {};
   const f = document.getElementById('stayFrom'), t = document.getElementById('stayTo');
@@ -532,6 +556,14 @@ function renderPresencia(){
     html += `<th class="day"><span class="dn">${x.n}</span><span class="dw">${x.w}</span>${showM ? `<span class="dm">${x.m}</span>` : '<span class="dm">&nbsp;</span>'}</th>`;
   });
   html += '</tr>';
+  if(r.inesManual){
+    html += `<tr class="inesrow"><td class="name" style="color:var(--warn)">Inés</td>`;
+    r.days.forEach(d => {
+      const on = !!(state.ines && state.ines[d]);
+      html += `<td><div class="daycell inesd ${on?'on':''}" onclick="toggleInesDay('${d}')"><div class="dot"></div></div></td>`;
+    });
+    html += '</tr>';
+  }
   r.people.forEach(p => {
     html += `<tr><td class="name">${esc(p.name)}</td>`;
     r.days.forEach(d => {
@@ -551,6 +583,11 @@ function setSplitMode(m){
   expSplitMode = m;
   document.getElementById('splitChips').classList.toggle('hidden', m !== 'custom');
 }
+function assignPayer(expId, pid){
+  if(!pid) return;
+  dbWrite('expenses/' + expId + '/paidBy', pid);
+  toast('Gasto marcado como pagado');
+}
 function toggleSplitPerson(pid){
   if(expSplitSel.has(pid)) expSplitSel.delete(pid); else expSplitSel.add(pid);
   renderGastos();
@@ -560,7 +597,8 @@ function renderGastos(){
   const names = {}; people.forEach(p => names[p.id] = p.name);
   const payer = document.getElementById('expPayer');
   const cur = payer.value;
-  payer.innerHTML = people.map(p => `<option value="${p.id}">${esc(p.name)}</option>`).join('');
+  payer.innerHTML = people.map(p => `<option value="${p.id}">${esc(p.name)}</option>`).join('') +
+    `<option value="__pending">Nadie todavía (pendiente)</option>`;
   if(cur) payer.value = cur;
   const chips = document.getElementById('splitChips');
   chips.classList.toggle('hidden', expSplitMode !== 'custom');
@@ -572,11 +610,16 @@ function renderGastos(){
   document.getElementById('expTotal').textContent = money(total);
   const el = document.getElementById('expList');
   el.innerHTML = exps.length ? exps.map(e => {
-    const who = e.paidBy && names[e.paidBy] ? 'pagó ' + names[e.paidBy] : 'sin pagador';
+    const paid = e.paidBy && names[e.paidBy];
     const div = Array.isArray(e.split)
       ? 'entre: ' + e.split.filter(id => names[id]).map(id => names[id].split(' ')[0]).join(', ')
       : 'entre todos (por días)';
-    return `<div class="list-item"><div class="main"><div class="t">${esc(e.desc)}</div><div class="s">${e.date ? fmtDateShort(e.date) + ' · ' : ''}${esc(who)} · ${esc(div)}</div></div>` +
+    const who = paid ? 'pagó ' + names[e.paidBy] : '<b style="color:var(--warn)">pendiente por pagar</b>';
+    const assign = paid ? '' :
+      `<div style="margin-top:6px"><select style="font-size:13px;padding:6px 8px;max-width:190px" onchange="assignPayer('${e.id}', this.value)">` +
+      `<option value="">¿Ya lo pagó alguien?</option>` +
+      people.map(p => `<option value="${p.id}">${esc(p.name)}</option>`).join('') + `</select></div>`;
+    return `<div class="list-item"><div class="main"><div class="t">${esc(e.desc)}</div><div class="s">${e.date ? fmtDateShort(e.date) + ' · ' : ''}${who} · ${esc(div)}</div>${assign}</div>` +
     `<div class="amt">${money(Number(e.amount))}</div>` +
     `<button class="danger tiny" onclick="armDelete(this,'expenses/${e.id}')">✕</button></div>`;
   }).join('') : '<div class="empty">Todavía no hay gastos.</div>';
@@ -606,6 +649,7 @@ function renderAjustes(){
   if(document.activeElement !== document.getElementById('cfgStart')) document.getElementById('cfgStart').value = c.start || '';
   if(document.activeElement !== document.getElementById('cfgEnd')) document.getElementById('cfgEnd').value = c.end || '';
   if(document.activeElement !== document.getElementById('cfgRate')) document.getElementById('cfgRate').value = (c.rate != null ? c.rate : 25);
+  if(document.activeElement !== document.getElementById('cfgInesMode')) document.getElementById('cfgInesMode').value = c.inesMode || 'auto';
   const ppl = peopleArr();
   const el = document.getElementById('peopleList');
   el.innerHTML = ppl.length ? ppl.map(p =>
@@ -631,10 +675,11 @@ function saveConfig(){
   const start = document.getElementById('cfgStart').value;
   const end = document.getElementById('cfgEnd').value;
   const rate = parseFloat(document.getElementById('cfgRate').value);
+  const inesMode = document.getElementById('cfgInesMode').value;
   if(!start || !end) return toast('Elige las fechas desde y hasta');
   if(parseISO(end) < parseISO(start)) return toast('La fecha final debe ser después de la inicial');
   if(periodRangeTooLong(start,end)) return toast('El período no puede pasar de 120 días');
-  dbWrite('config', {start, end, rate: isNaN(rate) ? 25 : rate});
+  dbWrite('config', {start, end, rate: isNaN(rate) ? 25 : rate, inesMode});
   toast('Período guardado');
 }
 function periodRangeTooLong(s,e){ return (parseISO(e) - parseISO(s)) / 86400000 > 120; }
@@ -652,6 +697,9 @@ function quickAddPerson(name){
 function toggleDay(pid, day){
   dbWrite('presence/' + pid + '/' + day, isPresent(pid, day) ? null : 1);
 }
+function toggleInesDay(day){
+  dbWrite('ines/' + day, (state.ines && state.ines[day]) ? null : 1);
+}
 function applyStay(present){
   const pid = document.getElementById('stayPerson').value;
   const from = document.getElementById('stayFrom').value;
@@ -661,7 +709,8 @@ function applyStay(present){
   if(parseISO(to) < parseISO(from)) return toast('La salida debe ser después de la entrada');
   const days = periodDays().filter(d => d >= from && d <= to);
   if(!days.length) return toast('Esas fechas están fuera del período');
-  days.forEach(d => dbWrite('presence/' + pid + '/' + d, present ? 1 : null));
+  const base = pid === '__ines' ? 'ines/' : 'presence/' + pid + '/';
+  days.forEach(d => dbWrite(base + d, present ? 1 : null));
   toast(present ? 'Días marcados' : 'Días quitados');
 }
 function addExpense(){
@@ -671,7 +720,8 @@ function addExpense(){
   if(!desc) return toast('Escribe una descripción');
   if(isNaN(amt) || amt <= 0) return toast('Escribe un valor válido');
   if(!paidBy) return toast('Agrega personas en Ajustes primero');
-  const entry = {desc, amount: amt, paidBy, date: toISO(new Date()), ts: Date.now()};
+  const entry = {desc, amount: amt, date: toISO(new Date()), ts: Date.now()};
+  if(paidBy !== '__pending') entry.paidBy = paidBy;
   if(expSplitMode === 'custom'){
     const ids = [...expSplitSel].filter(id => state.people && state.people[id]);
     if(!ids.length) return toast('Elige al menos una persona para dividir');
@@ -717,7 +767,7 @@ function armDeletePerson(btn, pid){
 }
 function armReset(btn){
   if(btn.classList.contains('armed')){
-    dbWrite('presence', null); dbWrite('expenses', null); dbWrite('payments', null);
+    dbWrite('presence', null); dbWrite('expenses', null); dbWrite('payments', null); dbWrite('ines', null);
     disarmAll(); toast('Período reiniciado');
   } else {
     btn.classList.add('armed'); btn.textContent = '¿Seguro? Toca otra vez para borrar todo';
