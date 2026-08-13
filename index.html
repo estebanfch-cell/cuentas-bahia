@@ -15,11 +15,11 @@
   --radius:14px;
 }
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
-html,body{height:100%}
+html{height:100%}
 body{
+  min-height:100%;
   font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
   background:var(--sand); color:var(--ink); font-size:15px;
-  padding-bottom:74px;
 }
 header.app{
   background:linear-gradient(135deg,var(--ocean-dark),var(--ocean));
@@ -31,7 +31,7 @@ header.app .sub{font-size:12px;opacity:.85;margin-top:2px;display:flex;gap:8px;a
 .badge{display:inline-block;font-size:10px;font-weight:700;padding:2px 8px;border-radius:99px;background:rgba(255,255,255,.2)}
 .badge.live{background:#34d399;color:#064e3b}
 .badge.demo{background:#fbbf24;color:#78350f}
-main{padding:14px 12px 20px;max-width:760px;margin:0 auto}
+main{padding:14px 12px calc(110px + env(safe-area-inset-bottom));max-width:760px;margin:0 auto}
 .card{background:var(--card);border-radius:var(--radius);box-shadow:0 1px 4px rgba(0,0,0,.06);padding:14px;margin-bottom:14px}
 .card h2{font-size:14px;font-weight:700;color:var(--ocean-dark);margin-bottom:10px;text-transform:uppercase;letter-spacing:.5px}
 .muted{color:var(--ink-soft);font-size:12.5px}
@@ -52,32 +52,46 @@ button.ghost{background:var(--ocean-light);color:var(--ocean-dark)}
 button.soft{background:var(--sand-dark);color:var(--ink)}
 button.danger{background:#fee2e2;color:var(--bad)}
 button.danger.armed{background:var(--bad);color:#fff}
+button.warnbtn{background:#fef3c7;color:#92400e}
+button.warnbtn.armed{background:var(--warn);color:#fff}
 button.tiny{padding:6px 10px;font-size:12.5px;border-radius:8px}
 .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(105px,1fr));gap:8px;margin-bottom:14px}
 .stat{background:var(--card);border-radius:12px;padding:10px 12px;box-shadow:0 1px 4px rgba(0,0,0,.06)}
 .stat .v{font-size:17px;font-weight:800;color:var(--ocean-dark)}
 .stat .l{font-size:10.5px;font-weight:600;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.4px;margin-top:2px}
 table{border-collapse:collapse;width:100%}
-.tbl-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;border-radius:10px}
+.tbl-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;border-radius:10px;padding-bottom:12px;overscroll-behavior-x:contain}
 th,td{padding:8px 9px;font-size:13px;text-align:right;white-space:nowrap;border-bottom:1px solid var(--line)}
 th{font-size:10.5px;text-transform:uppercase;letter-spacing:.4px;color:var(--ink-soft);background:var(--sand);position:sticky;top:0}
-td.name,th.name{text-align:left;font-weight:600;position:sticky;left:0;background:var(--card);z-index:2;max-width:130px;overflow:hidden;text-overflow:ellipsis}
+td.name,th.name{text-align:left;font-weight:600;position:sticky;left:0;background:var(--card);z-index:2;max-width:140px;overflow:hidden;text-overflow:ellipsis}
 tr.total td{font-weight:800;background:var(--sand);border-top:2px solid var(--ocean)}
+tr.clickable{cursor:pointer}
 .pos{color:var(--bad);font-weight:700}
 .neg{color:var(--ok);font-weight:700}
+.locktag{font-size:10px;font-weight:700;color:var(--bad);display:block}
+.locktag.done{color:var(--ok)}
+tr.outrow td{background:#fef2f2 !important}
+tr.outrow td.name{background:#fef2f2 !important}
+tr.settledrow td{background:#ecfdf5 !important;color:#6b7280}
+tr.settledrow td.name{background:#ecfdf5 !important;color:#6b7280;text-decoration:line-through}
+tr.settledrow td.name .locktag{text-decoration:none}
+td.done{color:var(--ok);font-weight:800;font-size:11px}
+.pgrid .daycell.gone.on .dot{background:#f87171}
+.pgrid td.name.gonename{color:#94a3b8;text-decoration:line-through}
 /* presence grid */
 .pgrid td{padding:0;border-bottom:1px solid var(--line)}
 .pgrid .daycell{width:36px;min-width:36px;height:38px;display:flex;align-items:center;justify-content:center;cursor:pointer;user-select:none}
 .pgrid .daycell .dot{width:22px;height:22px;border-radius:7px;background:var(--sand-dark);transition:background .1s}
 .pgrid .daycell.on .dot{background:var(--ocean);box-shadow:inset 0 0 0 2px rgba(255,255,255,.35)}
-.pgrid .daycell.inesd.on .dot{background:var(--warn)}
-.pgrid tr.inesrow td{background:#fdf6e9}
-.pgrid tr.inesrow td.name{background:#fdf6e9;font-weight:700}
+.pgrid .daycell.empd.on .dot{background:var(--warn)}
+.pgrid tr.emprow td{background:#fdf6e9}
+.pgrid tr.emprow td.name{background:#fdf6e9;font-weight:700;color:var(--warn)}
 .pgrid th.day{padding:6px 2px;text-align:center;min-width:36px}
 .pgrid th.day .dn{font-size:13px;font-weight:800;color:var(--ink);display:block}
 .pgrid th.day .dw{font-size:9px;display:block}
 .pgrid th.day .dm{font-size:8.5px;display:block;color:var(--ocean)}
-.pgrid td.cnt{text-align:center;font-size:11.5px;font-weight:700;color:var(--ocean-dark);background:var(--sand)}
+.pgrid td.cnt{text-align:center;font-size:11.5px;font-weight:700;color:var(--ocean-dark);background:var(--sand);padding:10px 2px}
+.pgrid td.cnt.info{font-size:9px;font-weight:600;color:var(--ink-soft);padding:6px 1px}
 .list-item{display:flex;justify-content:space-between;align-items:center;padding:10px 2px;border-bottom:1px solid var(--line);gap:8px}
 .list-item:last-child{border-bottom:none}
 .list-item .main{flex:1;min-width:0}
@@ -87,6 +101,7 @@ tr.total td{font-weight:800;background:var(--sand);border-top:2px solid var(--oc
 .chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
 .chip{background:var(--ocean-light);color:var(--ocean-dark);font-weight:600;font-size:13px;padding:7px 12px;border-radius:99px;border:none;cursor:pointer}
 .chip.on{background:var(--ocean);color:#fff}
+.emp-row{border:1.5px solid var(--line);border-radius:12px;padding:10px;margin-bottom:10px}
 /* tabs */
 nav.tabs{
   position:fixed;bottom:0;left:0;right:0;background:#fff;display:flex;z-index:40;
@@ -118,6 +133,9 @@ nav.tabs button.active{color:var(--ocean)}
 }
 .toast.show{opacity:.95}
 .detail-box{background:var(--sand);border-radius:10px;padding:10px 12px;margin-top:8px;font-size:12.5px;line-height:1.6}
+.dl{display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px dashed var(--line);font-size:13px}
+.dl:last-child{border-bottom:none}
+.dl b{font-weight:700}
 @media(min-width:600px){ body{font-size:16px} }
 </style>
 </head>
@@ -130,11 +148,11 @@ nav.tabs button.active{color:var(--ocean)}
     <h1>Cuentas Bahía</h1>
     <p>Para que toda la familia vea lo mismo en tiempo real, hay que conectar la app a una base de datos gratuita (Firebase de Google). Se hace una sola vez, toma ~10 minutos y no necesita tarjeta.</p>
   </div>
-  <div class="step"><div class="n">1</div><div class="b">Entra a <b>console.firebase.google.com</b> con una cuenta de Google y pulsa <b>“Crear un proyecto”</b> (ponle un nombre como <code>cuentas-bahia</code>; puedes desactivar Google Analytics).</div></div>
-  <div class="step"><div class="n">2</div><div class="b">En el menú izquierdo: <b>Compilación → Realtime Database → Crear base de datos</b>. Elige la ubicación por defecto y el <b>modo de prueba</b>. Luego, en la pestaña <b>Reglas</b>, deja las reglas así y publica:<br><code>{ "rules": { ".read": true, ".write": true } }</code><br><span class="muted">(cualquiera con el link puede escribir — perfecto para uso familiar)</span></div></div>
-  <div class="step"><div class="n">3</div><div class="b">Ve a <b>Configuración del proyecto</b> (engranaje) → sección <b>Tus apps</b> → pulsa el ícono <b>&lt;/&gt;</b> (web) → regístrala con cualquier nombre → copia el bloque <code>firebaseConfig</code> que te muestra.</div></div>
-  <div class="step"><div class="n">4</div><div class="b">Abre este archivo (<code>index.html</code>) con un editor de texto, busca <code>PEGA AQUÍ</code> cerca del inicio del código y pega tu configuración. <b>O más fácil:</b> pégale ese bloque a Claude y te devuelve el archivo ya listo.</div></div>
-  <div class="step"><div class="n">5</div><div class="b">Publica el archivo para tener tu link: entra a <b>app.netlify.com/drop</b> (cuenta gratis), arrastra el archivo y te da un link tipo <code>cuentas-bahia.netlify.app</code>. Ese link es el que compartes con la familia.</div></div>
+  <div class="step"><div class="n">1</div><div class="b">Entra a <b>console.firebase.google.com</b> con una cuenta de Google y pulsa <b>“Crear un proyecto”</b>.</div></div>
+  <div class="step"><div class="n">2</div><div class="b"><b>Realtime Database → Crear base de datos</b>, modo de prueba. En la pestaña <b>Reglas</b> publica:<br><code>{ "rules": { ".read": true, ".write": true } }</code></div></div>
+  <div class="step"><div class="n">3</div><div class="b"><b>Configuración del proyecto → Tus apps → &lt;/&gt;</b> → registra la app y copia el bloque <code>firebaseConfig</code>.</div></div>
+  <div class="step"><div class="n">4</div><div class="b">Pega la configuración en este archivo donde dice <code>PEGA AQUÍ</code>, o pídele a Claude que lo haga.</div></div>
+  <div class="step"><div class="n">5</div><div class="b">Publica el archivo (GitHub Pages o Netlify) y comparte el link con la familia.</div></div>
   <div style="text-align:center;margin-top:16px">
     <button class="ghost" onclick="startDemo()">Probar la app en modo demo (sin nube)</button>
     <p class="muted" style="margin-top:8px">En modo demo los datos se guardan solo en este navegador.</p>
@@ -153,8 +171,17 @@ nav.tabs button.active{color:var(--ocean)}
     <div class="stats" id="statCards"></div>
     <div class="card">
       <h2>Cuánto le toca a cada uno</h2>
+      <p class="muted" style="margin-bottom:8px">Toca una fila para ver el detalle de esa persona (y para saldar/congelar su cuenta).</p>
       <div class="tbl-wrap" id="summaryTable"></div>
       <div class="detail-box" id="summaryNotes"></div>
+    </div>
+    <div class="card" id="detailCardWrap" style="display:none">
+      <h2 id="detailTitle">Detalle</h2>
+      <div id="detailCard"></div>
+    </div>
+    <div class="card" id="groupCardWrap" style="display:none">
+      <h2>Saldos por pareja</h2>
+      <div class="tbl-wrap" id="groupTable"></div>
     </div>
     <div class="card">
       <h2>Cómo saldar cuentas</h2>
@@ -166,7 +193,7 @@ nav.tabs button.active{color:var(--ocean)}
   <section id="tab-presencia" class="hidden">
     <div class="card">
       <h2>Entrada y salida</h2>
-      <p class="muted" style="margin-bottom:10px">Marca desde qué día hasta qué día estuvo cada persona. ¿Se va y vuelve? Marca cada estadía por separado y se suman; con "Quitar esos días" borras los días de en medio. También puedes tocar los cuadritos de la tabla para días sueltos.</p>
+      <p class="muted" style="margin-bottom:10px">Marca desde qué día hasta qué día estuvo cada persona. ¿Se va y vuelve? Marca cada estadía por separado y se suman; con "Quitar esos días" borras los días de en medio. También puedes tocar los cuadritos para días sueltos. Las <b style="color:var(--warn)">empleadas</b> aparecen aquí mismo (fila naranja) y se les marca sus días de trabajo igual, por rango o día por día.</p>
       <div class="row">
         <div class="field"><label>Persona</label><select id="stayPerson"></select></div>
         <div class="field"><label>Entra</label><input type="date" id="stayFrom"></div>
@@ -181,13 +208,18 @@ nav.tabs button.active{color:var(--ocean)}
       <h2>Calendario de la casa</h2>
       <div class="tbl-wrap" id="presenceGrid"></div>
     </div>
+    <div class="card" id="empCalCard" style="display:none">
+      <h2>Calendario de empleadas</h2>
+      <p class="muted" style="margin-bottom:8px">Toca los cuadritos para marcar los días de trabajo de cada empleada (también puedes marcar por rango en Ajustes).</p>
+      <div class="tbl-wrap" id="empGrid"></div>
+    </div>
   </section>
 
   <!-- GASTOS -->
   <section id="tab-gastos" class="hidden">
     <div class="card">
       <h2>Agregar gasto</h2>
-      <p class="muted" style="margin-bottom:10px">Anota quién pagó — eso ya cuenta como plata puesta por esa persona (no hace falta registrarlo otra vez en Pagos).</p>
+      <p class="muted" style="margin-bottom:10px">Anota quién pagó — eso ya cuenta como plata puesta por esa persona (no se anota en ningún otro lado). Si nadie lo ha pagado aún (ej. propina), elige "pendiente".</p>
       <div class="row">
         <div class="field" style="flex:2"><label>Descripción</label><input id="expDesc" placeholder="Ej: Supermercado, propina, gas"></div>
         <div class="field"><label>Valor ($)</label><input id="expAmt" type="number" inputmode="decimal" step="0.01" placeholder="0.00"></div>
@@ -209,11 +241,11 @@ nav.tabs button.active{color:var(--ocean)}
     </div>
   </section>
 
-  <!-- PAGOS -->
+  <!-- TRANSFERENCIAS -->
   <section id="tab-pagos" class="hidden">
     <div class="card">
       <h2>Registrar transferencia</h2>
-      <p class="muted" style="margin-bottom:10px">Solo para movimientos reales de plata: cuando alguien le transfiere a otra persona para saldar, o cuando alguien le paga a Inés. Los gastos NO se anotan aquí — ya cuentan solos.</p>
+      <p class="muted" style="margin-bottom:10px">Solo movimientos reales de plata: cuando alguien le transfiere a otra persona para saldar, o cuando alguien le paga a una empleada. Los gastos NO van aquí — se anotan en Gastos con su pagador.</p>
       <div class="row">
         <div class="field"><label>De</label><select id="payFrom"></select></div>
         <div class="field"><label>Para</label><select id="payTo"></select></div>
@@ -237,18 +269,18 @@ nav.tabs button.active{color:var(--ocean)}
       <div class="row">
         <div class="field"><label>Desde</label><input type="date" id="cfgStart"></div>
         <div class="field"><label>Hasta</label><input type="date" id="cfgEnd"></div>
-        <div class="field"><label>Inés $/día</label><input type="number" id="cfgRate" step="0.5" inputmode="decimal"></div>
+        <button onclick="saveConfig()">Guardar</button>
       </div>
-      <div class="row" style="margin-top:10px">
-        <div class="field" style="flex:2"><label>Días de Inés</label>
-          <select id="cfgInesMode">
-            <option value="auto">Viene todos los días (que haya gente)</option>
-            <option value="manual">Marco sus días en el calendario</option>
-          </select>
-        </div>
-        <button onclick="saveConfig()">Guardar período</button>
+    </div>
+    <div class="card">
+      <h2>Empleadas de la casa</h2>
+      <div id="empList"></div>
+      <div class="row" style="margin-top:6px">
+        <div class="field" style="flex:2"><label>Nombre</label><input id="newEmpName" placeholder="Ej: Crispy"></div>
+        <div class="field"><label>$/día</label><input id="newEmpRate" type="number" step="0.5" inputmode="decimal" placeholder="25"></div>
+        <button onclick="addEmployee()">Agregar</button>
       </div>
-      <p class="muted" style="margin-top:8px">El costo de Inés se divide entre los presentes de cada día que ella viene. Si eliges "marco sus días", aparece una fila de Inés en el calendario de Presencia para marcar qué días trabaja.</p>
+      <p class="muted" style="margin-top:8px">Cada día que trabaja una empleada se cobra su tarifa, dividida entre las personas de "se divide entre" que estén en la casa ese día (según el calendario de Presencia). Si no eliges a nadie, se divide entre todos los presentes. Es igual para Inés, Cristy o cualquier otra.</p>
     </div>
     <div class="card">
       <h2>Personas</h2>
@@ -260,8 +292,18 @@ nav.tabs button.active{color:var(--ocean)}
       <div id="peopleList" style="margin-top:10px"></div>
     </div>
     <div class="card">
+      <h2>Parejas</h2>
+      <p class="muted" style="margin-bottom:10px">Une a dos personas para que sus saldos se sumen y salden juntos (cada uno igual aparece individual en la tabla).</p>
+      <div class="row">
+        <div class="field"><label>Persona 1</label><select id="grpA"></select></div>
+        <div class="field"><label>Persona 2</label><select id="grpB"></select></div>
+        <button onclick="addGroup()">Unir</button>
+      </div>
+      <div id="groupList" style="margin-top:10px"></div>
+    </div>
+    <div class="card">
       <h2>Empezar de nuevo</h2>
-      <p class="muted" style="margin-bottom:10px">Borra presencias, gastos y depósitos para arrancar un período nuevo. Las personas se mantienen. Guarda o anota los resultados antes.</p>
+      <p class="muted" style="margin-bottom:10px">Borra presencias, gastos, transferencias, días de empleadas y cuentas congeladas para arrancar un período nuevo. Las personas, parejas y empleadas se mantienen.</p>
       <button class="danger" id="resetBtn" onclick="armReset(this)">Borrar datos del período</button>
     </div>
   </section>
@@ -275,7 +317,7 @@ nav.tabs button.active{color:var(--ocean)}
   <button data-tab="gastos" onclick="showTab('gastos')">
     <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v10M15 9.5c0-1.4-1.3-2.5-3-2.5s-3 1-3 2.2c0 3.2 6 1.6 6 4.6 0 1.2-1.3 2.2-3 2.2s-3-1.1-3-2.5"/></svg>Gastos</button>
   <button data-tab="pagos" onclick="showTab('pagos')">
-    <svg viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg>Pagos</button>
+    <svg viewBox="0 0 24 24"><path d="M4 7h13M13 3l4 4-4 4"/><path d="M20 17H7M11 13l-4 4 4 4"/></svg>Transferir</button>
   <button data-tab="ajustes" onclick="showTab('ajustes')">
     <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 00.3 1.9l.1.1a2 2 0 11-2.9 2.9l-.1-.1a1.7 1.7 0 00-1.9-.3 1.7 1.7 0 00-1 1.5V21a2 2 0 11-4 0v-.1a1.7 1.7 0 00-1-1.6 1.7 1.7 0 00-1.9.3l-.1.1a2 2 0 11-2.9-2.9l.1-.1a1.7 1.7 0 00.3-1.9 1.7 1.7 0 00-1.5-1H3a2 2 0 110-4h.1a1.7 1.7 0 001.6-1 1.7 1.7 0 00-.3-1.9l-.1-.1a2 2 0 112.9-2.9l.1.1a1.7 1.7 0 001.9.3h0a1.7 1.7 0 001-1.5V3a2 2 0 114 0v.1a1.7 1.7 0 001 1.5h0a1.7 1.7 0 001.9-.3l.1-.1a2 2 0 112.9 2.9l-.1.1a1.7 1.7 0 00-.3 1.9v0a1.7 1.7 0 001.5 1H21a2 2 0 110 4h-.1a1.7 1.7 0 00-1.5 1z"/></svg>Ajustes</button>
 </nav>
@@ -288,16 +330,6 @@ nav.tabs button.active{color:var(--ocean)}
 <script>
 /* ================================================================
    CONFIGURACIÓN DE FIREBASE  —  PEGA AQUÍ tu bloque firebaseConfig
-   Reemplaza  null  por algo como:
-   const FIREBASE_CONFIG = {
-     apiKey: "AIza....",
-     authDomain: "cuentas-bahia.firebaseapp.com",
-     databaseURL: "https://cuentas-bahia-default-rtdb.firebaseio.com",
-     projectId: "cuentas-bahia",
-     storageBucket: "cuentas-bahia.appspot.com",
-     messagingSenderId: "123456789",
-     appId: "1:123456789:web:abc123"
-   };
    ================================================================ */
 const FIREBASE_CONFIG = {
   apiKey: "AIzaSyAL3ot7-vs4-LoNSmWACCACL01lXO-4fqQ",
@@ -312,9 +344,10 @@ const FIREBASE_CONFIG = {
 
 /* ================= estado y almacenamiento ================= */
 const ROOT = 'casa';
-let state = {};            // {config, people, presence, expenses, payments}
-let mode = null;           // 'cloud' | 'local'
+let state = {};
+let mode = null;
 let db = null;
+let selectedDetail = null;
 const FAMILY_SUGGESTIONS = ["Maripaz Bustamante","Mariajo","Esteban Ferlito","Emilia Gallegos","Rebeca Gallegos","Alfredo Sanchez","Pia Hidalgo","Martin Fernandez","Luz Elena Gallegos"];
 
 function lsGet(k){ try{ return localStorage.getItem(k); }catch(e){ return null; } }
@@ -332,10 +365,7 @@ function startCloud(){
     err => toast('Error de conexión: ' + err.message));
   showApp();
 }
-function startDemo(){
-  lsSet('bahia_demo','1');
-  startLocal();
-}
+function startDemo(){ lsSet('bahia_demo','1'); startLocal(); }
 function startLocal(){
   mode = 'local';
   try { state = JSON.parse(lsGet('bahia_data') || '{}'); } catch(e){ state = {}; }
@@ -354,7 +384,6 @@ function dbWrite(path, value){
   }
 }
 function newId(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
-
 function showApp(){
   document.getElementById('setup').classList.add('hidden');
   document.getElementById('app').classList.remove('hidden');
@@ -362,7 +391,7 @@ function showApp(){
   b.innerHTML = mode === 'cloud' ? '<span class="badge live">EN VIVO</span>' : '<span class="badge demo">DEMO LOCAL</span>';
 }
 
-/* ================= utilidades de fechas y dinero ================= */
+/* ================= utilidades ================= */
 function parseISO(s){ const [y,m,d] = s.split('-').map(Number); return new Date(y, m-1, d); }
 function toISO(d){ return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0'); }
 function periodDays(){
@@ -377,83 +406,175 @@ const WD = ['dom','lun','mar','mié','jue','vie','sáb'];
 const MES = ['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
 function fmtDay(iso){ const d = parseISO(iso); return {n:d.getDate(), w:WD[d.getDay()], m:MES[d.getMonth()]}; }
 function fmtDateShort(iso){ const d = parseISO(iso); return d.getDate() + ' ' + MES[d.getMonth()]; }
-function money(v){
-  const sign = v < 0 ? '-' : '';
-  return sign + '$' + Math.abs(v).toFixed(2);
-}
+function money(v){ const sign = v < 0 ? '-' : ''; return sign + '$' + Math.abs(v).toFixed(2); }
+function firstName(n){ return String(n||'').trim().split(' ')[0]; }
 function peopleArr(){
   return Object.entries(state.people || {})
-    .map(([id,p]) => ({id, name:p.name, order:p.order||0}))
+    .map(([id,p]) => ({id, name:p.name, order:p.order||0, settledAt:p.settledAt||null, settledDate:p.settledDate||null}))
     .sort((a,b) => a.order - b.order || a.name.localeCompare(b.name));
 }
 function isPresent(pid, day){ return !!(state.presence && state.presence[pid] && state.presence[pid][day]); }
+
+/* ================= empleadas ================= */
+function employeesArr(){
+  if(state.employees && Object.keys(state.employees).length){
+    return Object.entries(state.employees).map(([id,e]) => ({
+      id, name: e.name || '—', rate: Number(e.rate) || 0, mode: e.mode || 'auto',
+      only: (Array.isArray(e.only) && e.only.length) ? e.only : null
+    }));
+  }
+  if(state.config && state.config.empInit) return [];
+  const c = state.config || {};
+  return [{id:'ines', name:'Inés', rate: c.rate != null ? Number(c.rate) : 25, mode: c.inesMode || 'auto', only:null, virtual:true}];
+}
+function migrateEmployees(){
+  if(state.employees && Object.keys(state.employees).length) return;
+  if(state.config && state.config.empInit) return;
+  const v = employeesArr()[0];
+  if(v) dbWrite('employees/' + v.id, {name:v.name, rate:v.rate, mode:v.mode});
+  dbWrite('config/empInit', 1);
+}
+function empDaysOf(eid){
+  if(state.empDays && state.empDays[eid]) return state.empDays[eid];
+  if(eid === 'ines' && state.ines) return state.ines;
+  return {};
+}
+function empDayBase(eid){
+  if(eid === 'ines' && !(state.empDays && state.empDays.ines) && state.ines) return 'ines/';
+  return 'empDays/' + eid + '/';
+}
 
 /* ================= motor de cálculo ================= */
 function compute(){
   const days = periodDays();
   const people = peopleArr();
-  const rate = (state.config && Number(state.config.rate)) || 25;
+  const employees = employeesArr();
   const countByDay = {};
   days.forEach(d => { countByDay[d] = people.filter(p => isPresent(p.id, d)).length; });
   const activeDays = days.filter(d => countByDay[d] > 0);
-  const exps = Object.entries(state.expenses || {}).map(([id,e]) => ({id,...e}));
-  const totalGastos = exps.reduce((s,e) => s + Number(e.amount||0), 0);
-  // gastos "entre todos": se reparten por día entre los presentes (método del Excel)
-  const pooled = exps.filter(e => !Array.isArray(e.split)).reduce((s,e) => s + Number(e.amount||0), 0);
-  const dailyGasto = activeDays.length ? pooled / activeDays.length : 0;
-  // días de Inés: todos los días con gente (auto) o solo los marcados en su fila (manual)
-  const inesManual = (state.config && state.config.inesMode) === 'manual';
-  const isInesDay = d => inesManual ? !!(state.ines && state.ines[d]) : countByDay[d] > 0;
-  const inesDays = days.filter(d => isInesDay(d) && countByDay[d] > 0);
-  const inesOrphans = inesManual ? days.filter(d => isInesDay(d) && countByDay[d] === 0).length : 0;
-  const totalInes = inesDays.length * rate;
 
   const per = {};
-  people.forEach(p => per[p.id] = {name:p.name, days:0, ines:0, gastos:0, paid:0, net:0});
-  days.forEach(d => {
-    const n = countByDay[d]; if(!n) return;
-    const chargeInes = isInesDay(d);
-    people.forEach(p => {
-      if(isPresent(p.id, d)){
-        per[p.id].days++;
-        if(chargeInes) per[p.id].ines += rate / n;
-        per[p.id].gastos += dailyGasto / n;
-      }
-    });
+  people.forEach(p => per[p.id] = {
+    name:p.name, settledAt:p.settledAt, settledDate:p.settledDate,
+    days:0, emp:0, empBy:{}, gPooled:0, gCustom:0, paid:0, empPay:0, trNet:0, transfer:0, net:0
   });
-  // gastos divididos entre personas elegidas (partes iguales)
-  let sinPagador = 0;
+  days.forEach(d => { people.forEach(p => { if(isPresent(p.id, d)) per[p.id].days++; }); });
+
+  // ---- empleadas: su tarifa se cobra los días que trabajan, dividida entre los presentes (o su grupo) ----
+  const empTotals = {}, empOrphans = {}, empWorkDays = {}, empCostByDay = {};
+  let totalEmp = 0;
+  employees.forEach(emp => {
+    const marked = empDaysOf(emp.id);
+    const workDays = days.filter(d => emp.mode === 'manual' ? !!marked[d] : countByDay[d] > 0);
+    let tot = 0, orph = 0, wd = 0;
+    workDays.forEach(d => {
+      let pool = people.filter(p => isPresent(p.id, d));
+      if(emp.only) pool = pool.filter(p => emp.only.includes(p.id));
+      if(!pool.length){ orph++; return; }
+      tot += emp.rate; wd++;
+      pool.forEach(p => {
+        per[p.id].emp += emp.rate / pool.length;
+        per[p.id].empBy[emp.id] = (per[p.id].empBy[emp.id] || 0) + emp.rate / pool.length;
+      });
+      empCostByDay[d] = (empCostByDay[d] || 0) + emp.rate;
+    });
+    empTotals[emp.id] = tot; empOrphans[emp.id] = orph; empWorkDays[emp.id] = wd;
+    totalEmp += tot;
+  });
+
+  // ---- gastos ----
+  const exps = Object.entries(state.expenses || {}).map(([id,e]) => ({id,...e}));
+  const totalGastos = exps.reduce((s,e) => s + Number(e.amount||0), 0);
+  const pooledTotal = exps.filter(e => !Array.isArray(e.split)).reduce((s,e) => s + Number(e.amount||0), 0);
+  const dailyGasto = activeDays.length ? pooledTotal / activeDays.length : 0;
+  let sinPagador = 0, unassignedPooled = 0;
   exps.forEach(e => {
+    const amt = Number(e.amount || 0);
     if(Array.isArray(e.split)){
       const ids = e.split.filter(id => per[id]);
-      if(ids.length){ const share = Number(e.amount||0) / ids.length; ids.forEach(id => per[id].gastos += share); }
+      if(ids.length){ const share = amt / ids.length; ids.forEach(id => per[id].gCustom += share); }
+    } else if(activeDays.length){
+      // entre todos: por día entre los presentes; quien ya congeló su cuenta no entra en gastos posteriores
+      const daily = amt / activeDays.length;
+      const ets = e.ts || 0;
+      activeDays.forEach(d => {
+        const elig = people.filter(p => isPresent(p.id, d) && (!p.settledAt || p.settledAt > ets));
+        if(elig.length) elig.forEach(p => per[p.id].gPooled += daily / elig.length);
+        else unassignedPooled += daily;
+      });
     }
-    // quien pagó el gasto ya puso esa plata
-    if(e.paidBy && per[e.paidBy]) per[e.paidBy].paid += Number(e.amount||0);
-    else sinPagador += Number(e.amount||0);
+    if(e.paidBy && per[e.paidBy]) per[e.paidBy].paid += amt;
+    else sinPagador += amt;
   });
-  // transferencias reales: de persona a persona, o a Inés
-  let inesPaid = 0;
+
+  // ---- transferencias ----
+  const empPaid = {};
+  employees.forEach(emp => empPaid[emp.id] = 0);
   Object.values(state.payments || {}).forEach(t => {
-    const amt = Number(t.amount||0);
-    const from = t.from || t.pid; // t.pid = formato antiguo (depósito al fondo)
-    if(from && per[from]) per[from].paid += amt;
-    if(t.to === '__ines') inesPaid += amt;
-    else if(t.to && per[t.to]) per[t.to].paid -= amt;
+    const amt = Number(t.amount || 0);
+    const from = t.from || t.pid;
+    let to = t.to;
+    if(to === '__ines') to = 'emp:ines';
+    const isEmp = to && to.startsWith && to.startsWith('emp:');
+    if(from && per[from]){
+      if(isEmp) per[from].empPay += amt; else per[from].trNet += amt;
+    }
+    if(isEmp){
+      const eid = to.slice(4);
+      if(empPaid[eid] !== undefined) empPaid[eid] += amt;
+    } else if(to && per[to]) per[to].trNet -= amt;
   });
-  people.forEach(p => { const x = per[p.id]; x.net = x.paid - (x.ines + x.gastos); });
-  const inesPending = Math.max(0, totalInes - inesPaid);
-  return {days, people, rate, countByDay, activeDays, totalGastos, dailyGasto, totalInes, per, inesPaid, inesPending, sinPagador, inesManual, isInesDay, inesDays, inesOrphans};
+  people.forEach(p => {
+    const x = per[p.id];
+    x.transfer = x.empPay + x.trNet;
+    x.net = x.paid + x.transfer - (x.emp + x.gPooled + x.gCustom);
+  });
+
+  const empPending = {};
+  let totalEmpPaid = 0, totalEmpPending = 0;
+  employees.forEach(emp => {
+    empPending[emp.id] = Math.max(0, empTotals[emp.id] - empPaid[emp.id]);
+    totalEmpPaid += empPaid[emp.id]; totalEmpPending += empPending[emp.id];
+  });
+
+  // ---- parejas ----
+  const groups = Object.entries(state.groups || {})
+    .map(([id,g]) => ({id, members:(g.members||[]).filter(m => per[m])}))
+    .filter(g => g.members.length >= 2);
+  const grouped = new Set(groups.flatMap(g => g.members));
+
+  return {days, people, employees, countByDay, activeDays, per,
+          empTotals, empOrphans, empWorkDays, empCostByDay, empPaid, empPending, totalEmp, totalEmpPaid, totalEmpPending,
+          totalGastos, dailyGasto, sinPagador, unassignedPooled, groups, grouped};
 }
-/* plan de transferencias para saldar (los que deben → los que pusieron de más, e Inés) */
+/* unidades para saldar: pareja = saldo combinado; el resto individual */
+function settlementUnits(r){
+  const units = [];
+  r.groups.forEach(g => {
+    units.push({
+      name: g.members.map(m => firstName(r.per[m].name)).join(' + '),
+      members: g.members,
+      net: g.members.reduce((s,m) => s + r.per[m].net, 0)
+    });
+  });
+  r.people.filter(p => !r.grouped.has(p.id)).forEach(p => units.push({name: r.per[p.id].name, members:[p.id], net: r.per[p.id].net}));
+  return units;
+}
 function settlementPlan(r){
   const debtors = [], creditors = [];
-  if(r.inesPending > 0.005) creditors.push({name:'Inés', ines:true, amt:r.inesPending, pri:2});
-  if(r.sinPagador > 0.005) creditors.push({name:'Gastos pendientes', pend:true, amt:r.sinPagador, pri:1});
-  r.people.forEach(p => {
-    const n = r.per[p.id].net;
-    if(n < -0.005) debtors.push({name:p.name, amt:-n});
-    else if(n > 0.005) creditors.push({name:p.name, amt:n, pri:0});
+  r.employees.forEach(emp => {
+    if(r.empPending[emp.id] > 0.015) creditors.push({name: emp.name, emp:true, toId:'emp:'+emp.id, amt: r.empPending[emp.id], pri:2});
+  });
+  if(r.sinPagador > 0.015) creditors.push({name:'Gastos pendientes', pend:true, toId:null, amt:r.sinPagador, pri:1});
+  settlementUnits(r).forEach(u => {
+    if(u.net < -0.015){
+      // paga el miembro con el saldo más negativo
+      const payer = [...u.members].sort((a,b) => r.per[a].net - r.per[b].net)[0];
+      debtors.push({name:u.name, fromId:payer, amt:-u.net});
+    } else if(u.net > 0.015){
+      const receiver = [...u.members].sort((a,b) => r.per[b].net - r.per[a].net)[0];
+      creditors.push({name:u.name, toId:receiver, amt:u.net, pri:0});
+    }
   });
   debtors.sort((a,b) => b.amt - a.amt);
   creditors.sort((a,b) => (b.pri - a.pri) || (b.amt - a.amt));
@@ -461,10 +582,10 @@ function settlementPlan(r){
   let i = 0, j = 0;
   while(i < debtors.length && j < creditors.length){
     const x = Math.min(debtors[i].amt, creditors[j].amt);
-    if(x > 0.005) plan.push({from:debtors[i].name, to:creditors[j].name, ines:!!creditors[j].ines, pend:!!creditors[j].pend, amount:x});
+    if(x > 0.015) plan.push({from:debtors[i].name, fromId:debtors[i].fromId, to:creditors[j].name, toId:creditors[j].toId, emp:!!creditors[j].emp, pend:!!creditors[j].pend, amount:x});
     debtors[i].amt -= x; creditors[j].amt -= x;
-    if(debtors[i].amt < 0.005) i++;
-    if(creditors[j].amt < 0.005) j++;
+    if(debtors[i].amt < 0.015) i++;
+    if(creditors[j].amt < 0.015) j++;
   }
   return plan;
 }
@@ -477,66 +598,157 @@ function renderHeader(){
   const c = state.config || {};
   const el = document.getElementById('periodLabel');
   el.textContent = (c.start && c.end)
-    ? 'Período: ' + fmtDateShort(c.start) + ' → ' + fmtDateShort(c.end) + '  ·  Inés ' + money(Number(c.rate)||25) + '/día'
+    ? 'Período: ' + fmtDateShort(c.start) + ' → ' + fmtDateShort(c.end)
     : 'Configura el período y las personas en Ajustes';
 }
+function stat(v,l){ return `<div class="stat"><div class="v">${v}</div><div class="l">${l}</div></div>`; }
+
 function renderResumen(){
   const r = compute();
-  const cards = document.getElementById('statCards');
-  cards.innerHTML =
+  document.getElementById('statCards').innerHTML =
     stat(money(r.totalGastos), 'Gastos') +
-    stat(money(r.totalInes), 'Inés') +
-    stat(money(r.totalGastos + r.totalInes), 'Total período') +
-    stat(money(r.inesPaid), 'Pagado a Inés');
+    stat(money(r.totalEmp), 'Empleadas') +
+    stat(money(r.totalGastos + r.totalEmp), 'Total período') +
+    stat(money(r.totalEmpPending), 'Falta a empleadas');
   const wrap = document.getElementById('summaryTable');
   if(!r.people.length || !r.days.length){
     wrap.innerHTML = '<div class="empty">Agrega el período y las personas en <b>Ajustes</b>, y marca los días en <b>Presencia</b>.</div>';
     document.getElementById('summaryNotes').innerHTML = '';
     document.getElementById('settleBox').innerHTML = '<div class="empty">Aquí aparecerá quién le transfiere a quién.</div>';
+    document.getElementById('detailCardWrap').style.display = 'none';
+    document.getElementById('groupCardWrap').style.display = 'none';
     return;
   }
-  let html = '<table><tr><th class="name">Persona</th><th>Días</th><th>Inés</th><th>Gastos</th><th>Le toca</th><th>Ya puso</th><th>Saldo</th></tr>';
-  let tD=0,tI=0,tG=0,tT=0,tP=0;
+  let html = '<table><tr><th class="name">Persona</th><th>Días</th><th>Empleadas</th><th>Gastos</th><th>Le toca</th><th>Pagó gastos</th><th>Pagó empl.</th><th>Transf.</th><th>Saldo</th></tr>';
+  let tD=0,tE=0,tG=0,tT=0,tP=0,tEP=0,tX=0;
   r.people.forEach(p => {
     const x = r.per[p.id];
-    const total = x.ines + x.gastos;
-    tD+=x.days; tI+=x.ines; tG+=x.gastos; tT+=total; tP+=x.paid;
-    const cls = x.net < -0.005 ? 'pos' : (x.net > 0.005 ? 'neg' : '');
-    const lbl = x.net < -0.005 ? 'debe ' + money(-x.net) : (x.net > 0.005 ? 'a favor ' + money(x.net) : 'al día');
-    html += `<tr><td class="name">${esc(x.name)}</td><td>${x.days}</td><td>${money(x.ines)}</td><td>${money(x.gastos)}</td><td><b>${money(total)}</b></td><td>${money(x.paid)}</td><td class="${cls}">${lbl}</td></tr>`;
+    const gastos = x.gPooled + x.gCustom;
+    const total = x.emp + gastos;
+    tD+=x.days; tE+=x.emp; tG+=gastos; tT+=total; tP+=x.paid; tEP+=x.empPay; tX+=x.trNet;
+    const isOut = !!x.settledAt;
+    const isDone = isOut && Math.abs(x.net) <= 0.015;
+    const cls = x.net < -0.015 ? 'pos' : (x.net > 0.015 ? 'neg' : '');
+    const lbl = isDone ? 'SALDADA' : (x.net < -0.015 ? 'debe ' + money(-x.net) : (x.net > 0.015 ? 'a favor ' + money(x.net) : 'al día'));
+    const lock = isDone ? `<span class="locktag done">salió y saldó${x.settledDate ? ' · ' + fmtDateShort(x.settledDate) : ''}</span>`
+               : (isOut ? `<span class="locktag">salió${x.settledDate ? ' ' + fmtDateShort(x.settledDate) : ''} — falta saldar</span>` : '');
+    const rowCls = isDone ? 'settledrow' : (isOut ? 'outrow' : '');
+    html += `<tr class="clickable ${rowCls}" onclick="showDetail('${p.id}')"><td class="name">${esc(x.name)}${lock}</td><td>${x.days}</td><td>${money(x.emp)}</td><td>${money(gastos)}</td><td><b>${money(total)}</b></td><td>${money(x.paid)}</td><td>${money(x.empPay)}</td><td>${money(x.trNet)}</td><td class="${isDone ? 'done' : cls}">${lbl}</td></tr>`;
   });
-  html += `<tr class="total"><td class="name">TOTAL</td><td>${tD}</td><td>${money(tI)}</td><td>${money(tG)}</td><td>${money(tT)}</td><td>${money(tP)}</td><td></td></tr></table>`;
+  html += `<tr class="total"><td class="name">TOTAL</td><td>${tD}</td><td>${money(tE)}</td><td>${money(tG)}</td><td>${money(tT)}</td><td>${money(tP)}</td><td>${money(tEP)}</td><td>${money(tX)}</td><td></td></tr></table>`;
+  const ssl = wrap.scrollLeft;
   wrap.innerHTML = html;
+  wrap.scrollLeft = ssl;
   let notes =
-    `<b>Le toca</b> = su parte de Inés + su parte de los gastos. <b>Ya puso</b> = gastos que pagó + transferencias hechas.<br>` +
-    `Gastos entre todos: ${money(r.dailyGasto)}/día dividido entre los presentes de cada día. Inés: ${money(r.rate)}/día × ${r.inesDays.length} días${r.inesManual ? ' (los marcados en su fila del calendario)' : ''}, dividido entre los presentes de cada día.`;
-  if(r.inesOrphans > 0) notes += `<br><b style="color:var(--warn)">Ojo:</b> Inés tiene ${r.inesOrphans} día(s) marcados en los que no hay nadie en la casa — esos días no se están cobrando a nadie. Revisa el calendario.`;
-  if(r.sinPagador > 0.005) notes += `<br><b style="color:var(--warn)">Hay ${money(r.sinPagador)} en gastos pendientes por pagar</b> (ya están divididos entre todos; cuando alguien los pague, márcalo en Gastos).`;
+    `<b>Le toca</b> = su parte de empleadas + gastos. Lo que puso, desglosado: <b>Pagó gastos</b> (gastos de su bolsillo), <b>Pagó empl.</b> (pagos a empleadas) y <b>Transf.</b> (transferencias a personas, enviadas menos recibidas).<br>` +
+    `Gastos entre todos: ${money(r.dailyGasto)}/día dividido entre los presentes de cada día.`;
+  r.employees.forEach(emp => {
+    notes += ` ${esc(emp.name)}: ${money(emp.rate)}/día × ${r.empWorkDays[emp.id]} días.`;
+    if(r.empOrphans[emp.id] > 0) notes += ` <b style="color:var(--warn)">Ojo: ${esc(emp.name)} tiene ${r.empOrphans[emp.id]} día(s) sin nadie a quien cobrar.</b>`;
+  });
+  if(r.sinPagador > 0.015) notes += `<br><b style="color:var(--warn)">Hay ${money(r.sinPagador)} en gastos pendientes por pagar</b> (ya divididos; márcalos pagados en Gastos cuando alguien ponga la plata).`;
+  if(r.unassignedPooled > 0.015) notes += `<br><b style="color:var(--warn)">${money(r.unassignedPooled)}</b> de gastos nuevos caen en días donde solo hay cuentas congeladas — revisa presencias.`;
   document.getElementById('summaryNotes').innerHTML = notes;
-  // plan de transferencias
+  renderDetail(r);
+  renderGroupTable(r);
+  renderSettle(r);
+}
+function renderGroupTable(r){
+  const wrapC = document.getElementById('groupCardWrap');
+  if(!r.groups.length){ wrapC.style.display = 'none'; return; }
+  wrapC.style.display = '';
+  let html = '<table><tr><th class="name">Pareja / persona</th><th>Le toca</th><th>Puso</th><th>Saldo</th></tr>';
+  settlementUnits(r).forEach(u => {
+    let toca=0, puso=0;
+    u.members.forEach(m => { const x=r.per[m]; toca += x.emp+x.gPooled+x.gCustom; puso += x.paid+x.transfer; });
+    const net = u.net;
+    const allOut = u.members.every(m => r.per[m].settledAt);
+    const isDone = allOut && Math.abs(net) <= 0.015;
+    const rowCls = isDone ? 'settledrow' : (allOut ? 'outrow' : '');
+    const cls = net < -0.015 ? 'pos' : (net > 0.015 ? 'neg' : '');
+    const lbl = isDone ? 'SALDADA' : (net < -0.015 ? 'debe ' + money(-net) : (net > 0.015 ? 'a favor ' + money(net) : 'al día'));
+    html += `<tr class="${rowCls}"><td class="name">${esc(u.name)}</td><td>${money(toca)}</td><td>${money(puso)}</td><td class="${isDone ? 'done' : cls}">${lbl}</td></tr>`;
+  });
+  html += '</table>';
+  document.getElementById('groupTable').innerHTML = html;
+}
+function renderSettle(r){
   const plan = settlementPlan(r);
   const box = document.getElementById('settleBox');
   if(!plan.length){
     box.innerHTML = '<div class="empty">Todo está saldado. No hace falta ninguna transferencia.</div>';
-  } else {
-    box.innerHTML = plan.map(t => {
-      let extra = '';
-      if(t.ines) extra = ' <span class="muted">(su pago del período)</span>';
-      if(t.pend) extra = ' <span class="muted">(cubrir propinas y gastos por pagar)</span>';
-      return `<div class="list-item"><div class="main"><div class="t">${esc(t.from)} &nbsp;→&nbsp; ${esc(t.to)}${extra}</div></div>` +
-      `<div class="amt">${money(t.amount)}</div></div>`;
-    }).join('') +
-    `<p class="muted" style="margin-top:10px">Con esto todos quedan al día. Las transferencias entre personas se registran en <b>Pagos</b>; si alguien cubre un gasto pendiente, márcalo como pagado en <b>Gastos</b>.</p>`;
+    return;
   }
+  box.innerHTML = plan.map(t => {
+    let extra = '';
+    if(t.emp) extra = ' <span class="muted">(su pago del período)</span>';
+    if(t.pend) extra = ' <span class="muted">(cubrir propinas y gastos por pagar)</span>';
+    const btn = (t.fromId && t.toId)
+      ? `<button class="ghost tiny" onclick="armPlanPay(this,'${t.fromId}','${t.toId}',${Math.round(t.amount*100)/100})">Registrar</button>`
+      : '';
+    return `<div class="list-item"><div class="main"><div class="t">${esc(t.from)} &nbsp;→&nbsp; ${esc(t.to)}${extra}</div></div>` +
+    `<div class="amt">${money(t.amount)}</div>${btn}</div>`;
+  }).join('') +
+  `<p class="muted" style="margin-top:10px">Cuando una transferencia ya se hizo de verdad, toca <b>Registrar</b> y queda anotada al instante (los saldos se actualizan solos). Las parejas aparecen juntas; si alguien cubre un gasto pendiente, se marca pagado en <b>Gastos</b>.</p>`;
 }
-function stat(v,l){ return `<div class="stat"><div class="v">${v}</div><div class="l">${l}</div></div>`; }
-
+function showDetail(pid){
+  selectedDetail = selectedDetail === pid ? null : pid;
+  renderResumen();
+  if(selectedDetail) document.getElementById('detailCardWrap').scrollIntoView({behavior:'smooth', block:'nearest'});
+}
+function renderDetail(r){
+  const wrapC = document.getElementById('detailCardWrap');
+  if(!selectedDetail || !r.per[selectedDetail]){ wrapC.style.display = 'none'; return; }
+  wrapC.style.display = '';
+  const x = r.per[selectedDetail];
+  document.getElementById('detailTitle').textContent = 'Detalle: ' + x.name;
+  let html = '';
+  html += `<div class="dl"><span>Días en la casa</span><b>${x.days}</b></div>`;
+  r.employees.forEach(emp => {
+    const v = x.empBy[emp.id] || 0;
+    if(v > 0.015) html += `<div class="dl"><span>Su parte de ${esc(emp.name)}</span><b>${money(v)}</b></div>`;
+  });
+  if(x.gPooled > 0.015) html += `<div class="dl"><span>Gastos entre todos (por días)</span><b>${money(x.gPooled)}</b></div>`;
+  if(x.gCustom > 0.015) html += `<div class="dl"><span>Gastos divididos con él/ella</span><b>${money(x.gCustom)}</b></div>`;
+  html += `<div class="dl"><span><b>Le toca en total</b></span><b>${money(x.emp + x.gPooled + x.gCustom)}</b></div>`;
+  html += `<div style="margin-top:10px" class="muted"><b>Lo que puso, desglosado:</b></div>`;
+  html += `<div class="dl"><span>Pagó en gastos</span><b>${money(x.paid)}</b></div>`;
+  html += `<div class="dl"><span>Pagó a empleadas</span><b>${money(x.empPay)}</b></div>`;
+  html += `<div class="dl"><span>Transferencias a personas (neto)</span><b>${money(x.trNet)}</b></div>`;
+  html += `<div class="dl"><span><b>Puso en total</b></span><b>${money(x.paid + x.empPay + x.trNet)}</b></div>`;
+  const paidList = Object.entries(state.expenses || {}).filter(([id,e]) => e.paidBy === selectedDetail);
+  if(paidList.length){
+    html += `<div style="margin-top:10px" class="muted"><b>Gastos que pagó:</b></div>`;
+    paidList.forEach(([id,e]) => { html += `<div class="dl"><span>${esc(e.desc)}</span><b>${money(Number(e.amount))}</b></div>`; });
+  }
+  const names = {}; r.people.forEach(p => names[p.id] = p.name);
+  const trs = Object.entries(state.payments || {}).filter(([id,t]) => (t.from||t.pid) === selectedDetail || t.to === selectedDetail);
+  if(trs.length){
+    html += `<div style="margin-top:10px" class="muted"><b>Transferencias:</b></div>`;
+    trs.forEach(([id,t]) => {
+      let to = t.to === '__ines' ? 'Inés' : (t.to && t.to.startsWith && t.to.startsWith('emp:') ? (r.employees.find(e=>e.id===t.to.slice(4))||{}).name || 'empleada' : (names[t.to] || 'fondo'));
+      html += `<div class="dl"><span>${esc(names[t.from||t.pid]||'—')} → ${esc(to)}</span><b>${money(Number(t.amount))}</b></div>`;
+    });
+  }
+  const cls = x.net < -0.015 ? 'pos' : 'neg';
+  const lbl = x.net < -0.015 ? 'debe ' + money(-x.net) : (x.net > 0.015 ? 'a favor ' + money(x.net) : 'al día');
+  html += `<div class="dl" style="margin-top:6px"><span><b>Saldo</b></span><b class="${cls}">${lbl}</b></div>`;
+  if(x.settledAt){
+    const done = Math.abs(x.net) <= 0.015;
+    html += `<p class="muted" style="margin-top:10px">Salió${x.settledDate ? ' el ' + fmtDateShort(x.settledDate) : ''}: los gastos "entre todos" agregados después ya no la incluyen. ${done ? 'Su cuenta quedó saldada en cero.' : 'Todavía falta saldar — usa los botones Registrar del plan de abajo cuando haga sus transferencias.'}</p>` +
+      `<div class="row" style="margin-top:8px"><button class="soft" onclick="reopenAccount('${selectedDetail}')">Reabrir (volver a incluir)</button></div>`;
+  } else {
+    html += `<p class="muted" style="margin-top:10px">¿Ya se va de la casa? Marca su salida: lo que le toca queda fijo y los gastos nuevos ya no la incluyen, aunque todavía no haya pagado. Después salda con los botones Registrar del plan de abajo y quedará en cero.</p>` +
+      `<div class="row" style="margin-top:8px"><button class="warnbtn" onclick="armSettle(this,'${selectedDetail}')">Marcar salida</button></div>`;
+  }
+  document.getElementById('detailCard').innerHTML = html;
+}
 function renderPresencia(){
   const r = compute();
   const sel = document.getElementById('stayPerson');
   const cur = sel.value;
-  sel.innerHTML = r.people.map(p => `<option value="${p.id}">${esc(p.name)}</option>`).join('') +
-    (r.inesManual ? `<option value="__ines">Inés (sus días de trabajo)</option>` : '');
+  const manualEmps = r.employees.filter(e => e.mode === 'manual');
+  sel.innerHTML = r.people.map(p => `<option value="${p.id}">${esc(p.name)}</option>`).join('');
   if(cur) sel.value = cur;
   const c = state.config || {};
   const f = document.getElementById('stayFrom'), t = document.getElementById('stayTo');
@@ -556,26 +768,80 @@ function renderPresencia(){
     html += `<th class="day"><span class="dn">${x.n}</span><span class="dw">${x.w}</span>${showM ? `<span class="dm">${x.m}</span>` : '<span class="dm">&nbsp;</span>'}</th>`;
   });
   html += '</tr>';
-  if(r.inesManual){
-    html += `<tr class="inesrow"><td class="name" style="color:var(--warn)">Inés</td>`;
-    r.days.forEach(d => {
-      const on = !!(state.ines && state.ines[d]);
-      html += `<td><div class="daycell inesd ${on?'on':''}" onclick="toggleInesDay('${d}')"><div class="dot"></div></div></td>`;
-    });
-    html += '</tr>';
-  }
   r.people.forEach(p => {
-    html += `<tr><td class="name">${esc(p.name)}</td>`;
+    const x = r.per[p.id];
+    const gone = !!x.settledAt;
+    html += `<tr><td class="name ${gone?'gonename':''}">${esc(p.name)}</td>`;
     r.days.forEach(d => {
       const on = isPresent(p.id, d);
-      html += `<td><div class="daycell ${on?'on':''}" onclick="toggleDay('${p.id}','${d}')"><div class="dot"></div></div></td>`;
+      html += `<td><div class="daycell ${gone?'gone':''} ${on?'on':''}" onclick="toggleDay('${p.id}','${d}')"><div class="dot"></div></div></td>`;
     });
     html += '</tr>';
   });
   html += '<tr><td class="name" style="font-size:11px;color:var(--ink-soft)">Personas/día</td>';
   r.days.forEach(d => { html += `<td class="cnt">${r.countByDay[d]||''}</td>`; });
+  html += '</tr>';
+  // mini resumen informativo: cuánto cuesta el día por persona según cuántos hay
+  html += '<tr><td class="name" style="font-size:10px;color:var(--ink-soft)">Gastos $/pers.</td>';
+  r.days.forEach(d => {
+    const n = r.countByDay[d];
+    html += `<td class="cnt info">${n ? (r.dailyGasto/n).toFixed(2) : ''}</td>`;
+  });
+  html += '</tr><tr><td class="name" style="font-size:10px;color:var(--ink-soft)">Empleadas $/pers.</td>';
+  r.days.forEach(d => {
+    const n = r.countByDay[d], c = r.empCostByDay[d] || 0;
+    html += `<td class="cnt info">${n && c ? (c/n).toFixed(2) : ''}</td>`;
+  });
+  html += '</tr><tr><td class="name" style="font-size:10px;color:var(--ink-soft)"><b>Total $/pers.</b></td>';
+  r.days.forEach(d => {
+    const n = r.countByDay[d], c = r.empCostByDay[d] || 0;
+    html += `<td class="cnt info"><b>${n ? ((r.dailyGasto + c)/n).toFixed(2) : ''}</b></td>`;
+  });
   html += '</tr></table>';
+  const psl = wrap.scrollLeft;
   wrap.innerHTML = html;
+  wrap.scrollLeft = psl;
+  // calendario aparte para empleadas (todas: las de días exactos y las automáticas)
+  const empCard = document.getElementById('empCalCard');
+  if(!r.employees.length){ empCard.style.display = 'none'; }
+  else {
+    empCard.style.display = '';
+    let eh = '<table class="pgrid"><tr><th class="name">Empleada</th>';
+    let pm = '';
+    r.days.forEach(d => {
+      const x = fmtDay(d);
+      const showM = x.m !== pm; pm = x.m;
+      eh += `<th class="day"><span class="dn">${x.n}</span><span class="dw">${x.w}</span>${showM ? `<span class="dm">${x.m}</span>` : '<span class="dm">&nbsp;</span>'}</th>`;
+    });
+    eh += '</tr>';
+    r.employees.forEach(emp => {
+      const manual = emp.mode === 'manual';
+      const marked = manual ? empDaysOf(emp.id) : null;
+      eh += `<tr class="emprow"><td class="name">${esc(emp.name)}${manual ? '' : '<span class="locktag" style="color:var(--ink-soft)">todos los días</span>'}</td>`;
+      r.days.forEach(d => {
+        const on = manual ? !!marked[d] : r.countByDay[d] > 0;
+        const fn = manual ? `toggleEmpDay('${emp.id}','${d}')` : `empConvertToggle('${emp.id}','${d}')`;
+        eh += `<td><div class="daycell empd ${on?'on':''}" onclick="${fn}"><div class="dot"></div></div></td>`;
+      });
+      eh += '</tr>';
+    });
+    eh += '</table>';
+    const eg = document.getElementById('empGrid');
+    const esl = eg.scrollLeft;
+    eg.innerHTML = eh;
+    eg.scrollLeft = esl;
+  }
+}
+/* tocar un día de una empleada "automática": pasa a días exactos conservando sus días actuales */
+function empConvertToggle(eid, day){
+  migrateEmployees();
+  const r = compute();
+  const marked = {};
+  r.days.forEach(d => { if(r.countByDay[d] > 0) marked[d] = 1; });
+  if(marked[day]) delete marked[day]; else marked[day] = 1;
+  dbWrite('employees/' + eid + '/mode', 'manual');
+  dbWrite('empDays/' + eid, Object.keys(marked).length ? marked : null);
+  toast('Ahora eliges sus días exactos — quita o marca los que quieras');
 }
 let expSplitMode = 'days';
 const expSplitSel = new Set();
@@ -583,14 +849,14 @@ function setSplitMode(m){
   expSplitMode = m;
   document.getElementById('splitChips').classList.toggle('hidden', m !== 'custom');
 }
+function toggleSplitPerson(pid){
+  if(expSplitSel.has(pid)) expSplitSel.delete(pid); else expSplitSel.add(pid);
+  renderGastos();
+}
 function assignPayer(expId, pid){
   if(!pid) return;
   dbWrite('expenses/' + expId + '/paidBy', pid);
   toast('Gasto marcado como pagado');
-}
-function toggleSplitPerson(pid){
-  if(expSplitSel.has(pid)) expSplitSel.delete(pid); else expSplitSel.add(pid);
-  renderGastos();
 }
 function renderGastos(){
   const people = peopleArr();
@@ -612,7 +878,7 @@ function renderGastos(){
   el.innerHTML = exps.length ? exps.map(e => {
     const paid = e.paidBy && names[e.paidBy];
     const div = Array.isArray(e.split)
-      ? 'entre: ' + e.split.filter(id => names[id]).map(id => names[id].split(' ')[0]).join(', ')
+      ? 'entre: ' + e.split.filter(id => names[id]).map(id => firstName(names[id])).join(', ')
       : 'entre todos (por días)';
     const who = paid ? 'pagó ' + names[e.paidBy] : '<b style="color:var(--warn)">pendiente por pagar</b>';
     const assign = paid ? '' :
@@ -625,20 +891,25 @@ function renderGastos(){
   }).join('') : '<div class="empty">Todavía no hay gastos.</div>';
 }
 function renderPagos(){
-  const people = peopleArr();
-  const names = {}; people.forEach(p => names[p.id] = p.name);
+  const r = compute();
+  const names = {}; r.people.forEach(p => names[p.id] = p.name);
   const selFrom = document.getElementById('payFrom'), selTo = document.getElementById('payTo');
   const curF = selFrom.value, curT = selTo.value;
-  const opts = people.map(p => `<option value="${p.id}">${esc(p.name)}</option>`).join('');
+  const opts = r.people.map(p => `<option value="${p.id}">${esc(p.name)}</option>`).join('');
   selFrom.innerHTML = opts;
-  selTo.innerHTML = `<option value="__ines">Inés (su pago)</option>` + opts;
+  selTo.innerHTML = r.employees.map(e => `<option value="emp:${e.id}">${esc(e.name)} (su pago)</option>`).join('') + opts;
   if(curF) selFrom.value = curF;
   if(curT) selTo.value = curT;
+  const empName = to => {
+    if(to === '__ines') return 'Inés';
+    if(to && to.startsWith && to.startsWith('emp:')){ const e = r.employees.find(x => x.id === to.slice(4)); return e ? e.name : 'empleada'; }
+    return null;
+  };
   const pays = Object.entries(state.payments || {}).map(([id,p]) => ({id,...p})).sort((a,b) => (b.ts||0)-(a.ts||0));
   const el = document.getElementById('payList');
   el.innerHTML = pays.length ? pays.map(p => {
     const from = names[p.from || p.pid] || '—';
-    const to = p.to === '__ines' ? 'Inés' : (names[p.to] || 'fondo común');
+    const to = empName(p.to) || names[p.to] || 'fondo común';
     return `<div class="list-item"><div class="main"><div class="t">${esc(from)} → ${esc(to)}</div><div class="s">${p.date ? fmtDateShort(p.date) : ''}${p.note ? ' · ' + esc(p.note) : ''}</div></div>` +
     `<div class="amt">${money(Number(p.amount))}</div>` +
     `<button class="danger tiny" onclick="armDelete(this,'payments/${p.id}')">✕</button></div>`;
@@ -648,12 +919,70 @@ function renderAjustes(){
   const c = state.config || {};
   if(document.activeElement !== document.getElementById('cfgStart')) document.getElementById('cfgStart').value = c.start || '';
   if(document.activeElement !== document.getElementById('cfgEnd')) document.getElementById('cfgEnd').value = c.end || '';
-  if(document.activeElement !== document.getElementById('cfgRate')) document.getElementById('cfgRate').value = (c.rate != null ? c.rate : 25);
-  if(document.activeElement !== document.getElementById('cfgInesMode')) document.getElementById('cfgInesMode').value = c.inesMode || 'auto';
+  // empleadas
+  const empListEl = document.getElementById('empList');
+  const ae = document.activeElement;
+  const editingEmp = ae && empListEl.contains(ae) && (ae.tagName === 'INPUT' || ae.tagName === 'SELECT');
+  if(!editingEmp){
+    const people = peopleArr();
+    const days = periodDays();
+    empListEl.innerHTML = employeesArr().map(emp => {
+      const only = emp.only || [];
+      let daysUi = '';
+      if(emp.mode === 'manual'){
+        const marked = empDaysOf(emp.id);
+        const nMarked = days.filter(d => marked[d]).length;
+        let dayChips = '';
+        if(days.length){
+          let prevM = '';
+          dayChips = days.map(d => {
+            const x = fmtDay(d);
+            const showM = x.m !== prevM; prevM = x.m;
+            return `<button class="chip ${marked[d]?'on':''}" style="padding:6px 9px;font-size:12px" onclick="toggleEmpDay('${emp.id}','${d}')">${showM ? x.m + ' ' : ''}${x.n}</button>`;
+          }).join('');
+        } else {
+          dayChips = '<span class="muted">Define primero el período (arriba).</span>';
+        }
+        daysUi = `<div class="muted" style="margin-top:10px"><b>Días que trabaja</b> (${nMarked} marcados). Toca los días y se guardan al instante — puedes dejar huecos, saltarte fines de semana, lo que sea:</div>
+        <div class="chips">${dayChips}</div>
+        <div class="chips" style="margin-top:6px">
+          <button class="chip" onclick="empMarkAll('${emp.id}')">Marcar todo el período</button>
+          <button class="chip" onclick="empClearWeekends('${emp.id}')">Quitar fines de semana</button>
+        </div>
+        <div class="muted" style="margin-top:10px">Opcional — marcar o quitar un rango de una sola vez:</div>
+        <div class="row" style="margin-top:4px">
+          <div class="field"><label>Desde</label><input type="date" id="empFrom_${emp.id}" ${days.length ? `min="${days[0]}" max="${days[days.length-1]}"` : ''}></div>
+          <div class="field"><label>Hasta</label><input type="date" id="empTo_${emp.id}" ${days.length ? `min="${days[0]}" max="${days[days.length-1]}"` : ''}></div>
+          <button class="ghost tiny" onclick="empStay('${emp.id}',true)">Marcar rango</button>
+          <button class="soft tiny" onclick="empStay('${emp.id}',false)">Quitar rango</button>
+        </div>`;
+      } else {
+        daysUi = `<div class="muted" style="margin-top:8px">Ahora mismo se le cobra todos los días que haya gente en la casa. Para elegir sus días exactos (ej. sin fines de semana), cambia arriba a <b>"Elijo sus días exactos"</b> — sus días actuales se conservan y solo quitas los que no trabaja.</div>`;
+      }
+      return `<div class="emp-row">
+        <div class="row">
+          <div class="field" style="flex:2"><label>Nombre</label><input value="${esc(emp.name)}" onchange="empUpdate('${emp.id}','name',this.value.trim())"></div>
+          <div class="field"><label>$/día</label><input type="number" step="0.5" inputmode="decimal" value="${emp.rate}" onchange="empUpdate('${emp.id}','rate',parseFloat(this.value)||0)"></div>
+          <div class="field" style="flex:2"><label>¿Qué días trabaja?</label>
+            <select onchange="empUpdate('${emp.id}','mode',this.value)">
+              <option value="auto" ${emp.mode!=='manual'?'selected':''}>Todos los días del período</option>
+              <option value="manual" ${emp.mode==='manual'?'selected':''}>Elijo sus días exactos</option>
+            </select>
+          </div>
+          <button class="danger tiny" onclick="armDeleteEmp(this,'${emp.id}')">✕</button>
+        </div>
+        ${daysUi}
+        <div class="muted" style="margin-top:10px">Se divide entre (nadie elegido = todos los presentes):</div>
+        <div class="chips">` +
+        people.map(p => `<button class="chip ${only.includes(p.id)?'on':''}" onclick="toggleEmpOnly('${emp.id}','${p.id}')">${esc(firstName(p.name))}</button>`).join('') +
+        `</div></div>`;
+    }).join('') || '<div class="empty">No hay empleadas. Agrega una abajo si la necesitas.</div>';
+  }
+  // personas
   const ppl = peopleArr();
   const el = document.getElementById('peopleList');
   el.innerHTML = ppl.length ? ppl.map(p =>
-    `<div class="list-item"><div class="main"><div class="t">${esc(p.name)}</div></div>` +
+    `<div class="list-item"><div class="main"><div class="t">${esc(p.name)}${p.settledAt ? ' <span class="locktag" style="display:inline">· congelada</span>' : ''}</div></div>` +
     `<button class="danger tiny" onclick="armDeletePerson(this,'${p.id}')">✕</button></div>`
   ).join('') : '';
   const missing = FAMILY_SUGGESTIONS.filter(n => !ppl.some(p => p.name.toLowerCase() === n.toLowerCase()));
@@ -661,6 +990,19 @@ function renderAjustes(){
     ? '<div class="muted" style="margin-top:10px">Agregar rápido:</div><div class="chips">' +
       missing.map(n => `<button class="chip" onclick="quickAddPerson('${esc(n)}')">+ ${esc(n)}</button>`).join('') + '</div>'
     : '';
+  // parejas
+  const gA = document.getElementById('grpA'), gB = document.getElementById('grpB');
+  const curA = gA.value, curB = gB.value;
+  const opts = ppl.map(p => `<option value="${p.id}">${esc(p.name)}</option>`).join('');
+  gA.innerHTML = opts; gB.innerHTML = opts;
+  if(curA) gA.value = curA;
+  if(curB) gB.value = curB;
+  const names = {}; ppl.forEach(p => names[p.id] = p.name);
+  const groups = Object.entries(state.groups || {}).map(([id,g]) => ({id, members:(g.members||[]).filter(m => names[m])})).filter(g => g.members.length >= 2);
+  document.getElementById('groupList').innerHTML = groups.length ? groups.map(g =>
+    `<div class="list-item"><div class="main"><div class="t">${esc(g.members.map(m => firstName(names[m])).join(' + '))}</div></div>` +
+    `<button class="danger tiny" onclick="armDelete(this,'groups/${g.id}')">✕</button></div>`
+  ).join('') : '';
 }
 
 /* ================= acciones ================= */
@@ -674,15 +1016,13 @@ function showTab(name){
 function saveConfig(){
   const start = document.getElementById('cfgStart').value;
   const end = document.getElementById('cfgEnd').value;
-  const rate = parseFloat(document.getElementById('cfgRate').value);
-  const inesMode = document.getElementById('cfgInesMode').value;
   if(!start || !end) return toast('Elige las fechas desde y hasta');
   if(parseISO(end) < parseISO(start)) return toast('La fecha final debe ser después de la inicial');
-  if(periodRangeTooLong(start,end)) return toast('El período no puede pasar de 120 días');
-  dbWrite('config', {start, end, rate: isNaN(rate) ? 25 : rate, inesMode});
+  if((parseISO(end) - parseISO(start)) / 86400000 > 120) return toast('El período no puede pasar de 120 días');
+  const c = state.config || {};
+  dbWrite('config', Object.assign({}, c, {start, end}));
   toast('Período guardado');
 }
-function periodRangeTooLong(s,e){ return (parseISO(e) - parseISO(s)) / 86400000 > 120; }
 function addPerson(){
   const inp = document.getElementById('newPerson');
   const name = inp.value.trim();
@@ -697,8 +1037,9 @@ function quickAddPerson(name){
 function toggleDay(pid, day){
   dbWrite('presence/' + pid + '/' + day, isPresent(pid, day) ? null : 1);
 }
-function toggleInesDay(day){
-  dbWrite('ines/' + day, (state.ines && state.ines[day]) ? null : 1);
+function toggleEmpDay(eid, day){
+  const on = !!empDaysOf(eid)[day];
+  dbWrite(empDayBase(eid) + day, on ? null : 1);
 }
 function applyStay(present){
   const pid = document.getElementById('stayPerson').value;
@@ -709,9 +1050,20 @@ function applyStay(present){
   if(parseISO(to) < parseISO(from)) return toast('La salida debe ser después de la entrada');
   const days = periodDays().filter(d => d >= from && d <= to);
   if(!days.length) return toast('Esas fechas están fuera del período');
-  const base = pid === '__ines' ? 'ines/' : 'presence/' + pid + '/';
+  const base = pid.startsWith('emp:') ? empDayBase(pid.slice(4)) : 'presence/' + pid + '/';
   days.forEach(d => dbWrite(base + d, present ? 1 : null));
   toast(present ? 'Días marcados' : 'Días quitados');
+}
+function empStay(eid, present){
+  const from = document.getElementById('empFrom_' + eid).value;
+  const to = document.getElementById('empTo_' + eid).value;
+  if(!from || !to) return toast('Elige las fechas desde y hasta');
+  if(parseISO(to) < parseISO(from)) return toast('La fecha final debe ser después de la inicial');
+  const days = periodDays().filter(d => d >= from && d <= to);
+  if(!days.length) return toast('Esas fechas están fuera del período');
+  const base = empDayBase(eid);
+  days.forEach(d => dbWrite(base + d, present ? 1 : null));
+  toast(present ? 'Días de trabajo marcados' : 'Días quitados');
 }
 function addExpense(){
   const desc = document.getElementById('expDesc').value.trim();
@@ -743,7 +1095,104 @@ function addPayment(){
   document.getElementById('payAmt').value = ''; document.getElementById('payNote').value = '';
   toast('Transferencia registrada');
 }
-/* borrar con doble toque para evitar accidentes */
+/* empleadas */
+function empUpdate(eid, field, value){
+  migrateEmployees();
+  if(field === 'name' && !value) return toast('El nombre no puede quedar vacío');
+  dbWrite('employees/' + eid + '/' + field, value);
+  // al pasar a "elijo sus días": conservar los días actuales (todos los del período con gente)
+  if(field === 'mode' && value === 'manual'){
+    const marked = empDaysOf(eid);
+    if(!Object.keys(marked).some(d => marked[d])){
+      const base = empDayBase(eid);
+      periodDays().forEach(d => dbWrite(base + d, 1));
+      toast('Días copiados — ahora quita los que no trabaja');
+      return;
+    }
+  }
+  toast('Empleada actualizada');
+}
+function empMarkAll(eid){
+  const base = empDayBase(eid);
+  periodDays().forEach(d => dbWrite(base + d, 1));
+  toast('Todo el período marcado');
+}
+function empClearWeekends(eid){
+  const base = empDayBase(eid);
+  const wk = periodDays().filter(d => { const dow = parseISO(d).getDay(); return dow === 0 || dow === 6; });
+  wk.forEach(d => dbWrite(base + d, null));
+  toast('Sábados y domingos quitados');
+}
+function toggleEmpOnly(eid, pid){
+  migrateEmployees();
+  const emp = (state.employees && state.employees[eid]) || {};
+  const only = Array.isArray(emp.only) ? [...emp.only] : [];
+  const i = only.indexOf(pid);
+  if(i >= 0) only.splice(i,1); else only.push(pid);
+  dbWrite('employees/' + eid + '/only', only.length ? only : null);
+}
+function addEmployee(){
+  const name = document.getElementById('newEmpName').value.trim();
+  const rate = parseFloat(document.getElementById('newEmpRate').value);
+  if(!name) return toast('Escribe el nombre de la empleada');
+  if(isNaN(rate) || rate <= 0) return toast('Escribe su tarifa por día');
+  migrateEmployees();
+  dbWrite('employees/' + newId(), {name, rate, mode:'manual'});
+  document.getElementById('newEmpName').value = ''; document.getElementById('newEmpRate').value = '';
+  toast(name + ' agregada — marca sus días en Presencia');
+}
+function armDeleteEmp(btn, eid){
+  if(btn.classList.contains('armed')){
+    migrateEmployees();
+    dbWrite('employees/' + eid, null);
+    dbWrite('empDays/' + eid, null);
+    if(eid === 'ines') dbWrite('ines', null);
+    toast('Empleada eliminada');
+  } else {
+    disarmAll(); btn.classList.add('armed'); btn.textContent = '¿Seguro?';
+    armTimer = setTimeout(disarmAll, 2500);
+  }
+}
+/* parejas */
+function addGroup(){
+  const a = document.getElementById('grpA').value;
+  const b = document.getElementById('grpB').value;
+  if(!a || !b) return toast('Agrega personas primero');
+  if(a === b) return toast('Elige dos personas distintas');
+  const taken = new Set(Object.values(state.groups || {}).flatMap(g => g.members || []));
+  if(taken.has(a) || taken.has(b)) return toast('Alguien ya está en otra pareja');
+  dbWrite('groups/' + newId(), {members:[a,b]});
+  toast('Pareja creada');
+}
+/* registrar una transferencia del plan con un toque */
+function armPlanPay(btn, fromId, toId, amount){
+  if(btn.classList.contains('armed')){
+    dbWrite('payments/' + newId(), {from: fromId, to: toId, amount: amount, note: 'saldo del plan', date: toISO(new Date()), ts: Date.now()});
+    toast('Transferencia registrada');
+  } else {
+    disarmAll(); btn.classList.add('armed'); btn.textContent = '¿Ya se hizo?';
+    btn.classList.remove('ghost'); btn.style.background = 'var(--ocean)'; btn.style.color = '#fff';
+    armTimer = setTimeout(disarmAll, 3000);
+  }
+}
+/* saldar / congelar */
+function armSettle(btn, pid){
+  if(btn.classList.contains('armed')){
+    dbWrite('people/' + pid + '/settledAt', Date.now());
+    dbWrite('people/' + pid + '/settledDate', toISO(new Date()));
+    disarmAll();
+    toast('Cuenta congelada');
+  } else {
+    disarmAll(); btn.classList.add('armed'); btn.textContent = '¿Seguro? Los gastos nuevos ya no le tocarán';
+    armTimer = setTimeout(disarmAll, 3000);
+  }
+}
+function reopenAccount(pid){
+  dbWrite('people/' + pid + '/settledAt', null);
+  dbWrite('people/' + pid + '/settledDate', null);
+  toast('Cuenta reabierta');
+}
+/* borrar con doble toque */
 let armTimer = null;
 function armDelete(btn, path){
   if(btn.classList.contains('armed')){
@@ -758,16 +1207,21 @@ function armDeletePerson(btn, pid){
     dbWrite('people/' + pid, null);
     dbWrite('presence/' + pid, null);
     Object.entries(state.payments || {}).forEach(([id,p]) => { if(p.pid === pid || p.from === pid || p.to === pid) dbWrite('payments/' + id, null); });
+    Object.entries(state.groups || {}).forEach(([id,g]) => { if((g.members||[]).includes(pid)) dbWrite('groups/' + id, null); });
     expSplitSel.delete(pid);
+    if(selectedDetail === pid) selectedDetail = null;
     toast('Persona eliminada');
   } else {
-    disarmAll(); btn.classList.add('armed'); btn.textContent = '¿Seguro? Se borran sus días y pagos';
+    disarmAll(); btn.classList.add('armed'); btn.textContent = '¿Seguro? Se borran sus días y transferencias';
     armTimer = setTimeout(disarmAll, 3000);
   }
 }
 function armReset(btn){
   if(btn.classList.contains('armed')){
-    dbWrite('presence', null); dbWrite('expenses', null); dbWrite('payments', null); dbWrite('ines', null);
+    dbWrite('presence', null); dbWrite('expenses', null); dbWrite('payments', null);
+    dbWrite('ines', null); dbWrite('empDays', null);
+    peopleArr().forEach(p => { if(p.settledAt){ dbWrite('people/' + p.id + '/settledAt', null); dbWrite('people/' + p.id + '/settledDate', null); } });
+    selectedDetail = null;
     disarmAll(); toast('Período reiniciado');
   } else {
     btn.classList.add('armed'); btn.textContent = '¿Seguro? Toca otra vez para borrar todo';
@@ -776,9 +1230,12 @@ function armReset(btn){
 }
 function disarmAll(){
   clearTimeout(armTimer);
-  document.querySelectorAll('button.danger.armed').forEach(b => {
+  document.querySelectorAll('button.danger.armed, button.warnbtn.armed, button.armed').forEach(b => {
     b.classList.remove('armed');
-    b.textContent = b.id === 'resetBtn' ? 'Borrar datos del período' : '✕';
+    if(b.id === 'resetBtn') b.textContent = 'Borrar datos del período';
+    else if(b.classList.contains('warnbtn')) b.textContent = 'Marcar salida';
+    else if(b.classList.contains('danger')) b.textContent = '✕';
+    else { b.textContent = 'Registrar'; b.classList.add('ghost'); b.style.background = ''; b.style.color = ''; }
   });
 }
 function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
