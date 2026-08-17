@@ -303,8 +303,13 @@ nav.tabs button.active{color:var(--ocean)}
     </div>
     <div class="card">
       <h2>Empezar de nuevo</h2>
-      <p class="muted" style="margin-bottom:10px">Borra presencias, gastos, transferencias, días de empleadas y cuentas congeladas para arrancar un período nuevo. Las personas, parejas y empleadas se mantienen.</p>
-      <button class="danger" id="resetBtn" onclick="armReset(this)">Borrar datos del período</button>
+      <p class="muted" style="margin-bottom:10px">Guarda una copia de solo lectura de este período en el historial y borra presencias, gastos, transferencias, días de empleadas y salidas para arrancar uno nuevo. Las personas, parejas y empleadas se mantienen.</p>
+      <button class="danger" id="resetBtn" onclick="armReset(this)">Guardar en historial y empezar de nuevo</button>
+    </div>
+    <div class="card" id="historyCard" style="display:none">
+      <h2>Períodos anteriores</h2>
+      <p class="muted" style="margin-bottom:8px">Solo lectura. Toca un período para ver su detalle.</p>
+      <div id="historyList"></div>
     </div>
   </section>
 </main>
@@ -410,7 +415,8 @@ function money(v){ const sign = v < 0 ? '-' : ''; return sign + '$' + Math.abs(v
 function firstName(n){ return String(n||'').trim().split(' ')[0]; }
 function peopleArr(){
   return Object.entries(state.people || {})
-    .map(([id,p]) => ({id, name:p.name, order:p.order||0, settledAt:p.settledAt||null, settledDate:p.settledDate||null}))
+    .map(([id,p]) => ({id, name:p.name, order:p.order||0, settledAt:p.settledAt||null, settledDate:p.settledDate||null,
+                       frozen: (p.frozen && typeof p.frozen === 'object') ? p.frozen : null}))
     .sort((a,b) => a.order - b.order || a.name.localeCompare(b.name));
 }
 function isPresent(pid, day){ return !!(state.presence && state.presence[pid] && state.presence[pid][day]); }
@@ -526,6 +532,15 @@ function compute(){
   });
   people.forEach(p => {
     const x = per[p.id];
+    // cuenta congelada: lo que le toca queda fijo en el monto del momento de la salida
+    if(p.settledAt && p.frozen){
+      x.emp = Number(p.frozen.emp || 0);
+      x.empBy = p.frozen.empBy || {};
+      x.gPooled = Number(p.frozen.gPooled || 0);
+      x.gCustom = Number(p.frozen.gCustom || 0);
+      x.days = p.frozen.days != null ? Number(p.frozen.days) : x.days;
+      x.frozen = true;
+    }
     x.transfer = x.empPay + x.trNet;
     x.net = x.paid + x.transfer - (x.emp + x.gPooled + x.gCustom);
   });
@@ -592,7 +607,7 @@ function settlementPlan(r){
 
 /* ================= render ================= */
 function renderAll(){
-  renderHeader(); renderResumen(); renderPresencia(); renderGastos(); renderPagos(); renderAjustes();
+  renderHeader(); renderResumen(); renderPresencia(); renderGastos(); renderPagos(); renderAjustes(); renderHistory();
 }
 function renderHeader(){
   const c = state.config || {};
@@ -735,8 +750,12 @@ function renderDetail(r){
   html += `<div class="dl" style="margin-top:6px"><span><b>Saldo</b></span><b class="${cls}">${lbl}</b></div>`;
   if(x.settledAt){
     const done = Math.abs(x.net) <= 0.015;
-    html += `<p class="muted" style="margin-top:10px">Salió${x.settledDate ? ' el ' + fmtDateShort(x.settledDate) : ''}: los gastos "entre todos" agregados después ya no la incluyen. ${done ? 'Su cuenta quedó saldada en cero.' : 'Todavía falta saldar — usa los botones Registrar del plan de abajo cuando haga sus transferencias.'}</p>` +
-      `<div class="row" style="margin-top:8px"><button class="soft" onclick="reopenAccount('${selectedDetail}')">Reabrir (volver a incluir)</button></div>`;
+    html += `<p class="muted" style="margin-top:10px">Salió${x.settledDate ? ' el ' + fmtDateShort(x.settledDate) : ''}: ${x.frozen ? 'lo que le toca quedó fijo en el monto de ese día; nada de lo que se cambie después la afecta.' : 'los gastos nuevos ya no la incluyen.'} ${done ? 'Su cuenta quedó saldada en cero.' : 'Todavía falta saldar — usa los botones Registrar del plan de abajo cuando haga sus transferencias.'}</p>`;
+    if(!x.frozen) html += `<p class="muted" style="margin-top:6px"><b style="color:var(--warn)">Ojo:</b> esta salida se marcó con una versión anterior y su monto no quedó fijo, por eso puede moverse si cambian días o empleadas. Toca "Fijar monto de hoy" para congelarlo.</p>`;
+    html += `<div class="row" style="margin-top:8px">` +
+      (!x.frozen ? `<button class="ghost" onclick="freezeNow('${selectedDetail}')">Fijar monto de hoy</button>` : '') +
+      (!done ? `<button class="ghost" onclick="forceSettle('${selectedDetail}')">Cerrar en cero (ya pagó todo)</button>` : '') +
+      `<button class="soft" onclick="reopenAccount('${selectedDetail}')">Reabrir (volver a incluir)</button></div>`;
   } else {
     html += `<p class="muted" style="margin-top:10px">¿Ya se va de la casa? Marca su salida: lo que le toca queda fijo y los gastos nuevos ya no la incluyen, aunque todavía no haya pagado. Después salda con los botones Registrar del plan de abajo y quedará en cero.</p>` +
       `<div class="row" style="margin-top:8px"><button class="warnbtn" onclick="armSettle(this,'${selectedDetail}')">Marcar salida</button></div>`;
@@ -1005,6 +1024,45 @@ function renderAjustes(){
   ).join('') : '';
 }
 
+/* historial de períodos (solo lectura) */
+let openHistory = null;
+function toggleHistory(id){ openHistory = openHistory === id ? null : id; renderHistory(); }
+function renderHistory(){
+  const card = document.getElementById('historyCard');
+  const items = Object.entries(state.history || {}).map(([id,h]) => ({id,...h})).sort((a,b) => (b.archivedAt||0)-(a.archivedAt||0));
+  if(!items.length){ card.style.display = 'none'; return; }
+  card.style.display = '';
+  document.getElementById('historyList').innerHTML = items.map(h => {
+    const title = (h.start && h.end) ? fmtDateShort(h.start) + ' → ' + fmtDateShort(h.end) + (h.start ? ' ' + h.start.slice(0,4) : '') : 'Período sin fechas';
+    const sub = `Cerrado ${h.archivedDate ? fmtDateShort(h.archivedDate) + ' ' + h.archivedDate.slice(0,4) : ''} · Gastos ${money(h.totalGastos||0)} · Empleadas ${money(h.totalEmp||0)}`;
+    let body = '';
+    if(openHistory === h.id){
+      body = '<div class="detail-box" style="margin-top:8px">';
+      body += '<b>Cuánto le tocó y puso cada uno</b>';
+      (h.people||[]).forEach(p => {
+        const lbl = p.net < -0.015 ? 'quedó debiendo ' + money(-p.net) : (p.net > 0.015 ? 'quedó a favor ' + money(p.net) : 'saldado');
+        body += `<div class="dl"><span>${esc(p.name)} <span class="muted">(${p.days} días)</span></span><b>tocó ${money(p.toca)} · puso ${money(p.puso)} · ${lbl}</b></div>`;
+      });
+      if((h.employees||[]).length){
+        body += '<div style="margin-top:8px"><b>Empleadas</b></div>';
+        h.employees.forEach(e => { body += `<div class="dl"><span>${esc(e.name)} <span class="muted">(${money(e.rate)}/día × ${e.days})</span></span><b>${money(e.total)}</b></div>`; });
+      }
+      if((h.expenses||[]).length){
+        body += '<div style="margin-top:8px"><b>Gastos</b></div>';
+        h.expenses.forEach(e => { body += `<div class="dl"><span>${e.date ? fmtDateShort(e.date) + ' · ' : ''}${esc(e.desc)} <span class="muted">· pagó ${esc(e.paidBy)}</span></span><b>${money(e.amount)}</b></div>`; });
+      }
+      if((h.transfers||[]).length){
+        body += '<div style="margin-top:8px"><b>Transferencias (quién pagó a quién)</b></div>';
+        h.transfers.forEach(t => { body += `<div class="dl"><span>${t.date ? fmtDateShort(t.date) + ' · ' : ''}${esc(t.from)} → ${esc(t.to)}${t.note ? ' <span class="muted">· ' + esc(t.note) + '</span>' : ''}</span><b>${money(t.amount)}</b></div>`; });
+      }
+      body += '</div>';
+    }
+    return `<div class="list-item" style="flex-direction:column;align-items:stretch;cursor:pointer" onclick="toggleHistory('${h.id}')">` +
+      `<div style="display:flex;justify-content:space-between;align-items:center;gap:8px"><div class="main"><div class="t">${esc(title)}</div><div class="s">${sub}</div></div><span class="muted">${openHistory === h.id ? '▲' : '▼'}</span></div>` +
+      `<div onclick="event.stopPropagation()">${body}</div></div>`;
+  }).join('');
+}
+
 /* ================= acciones ================= */
 function showTab(name){
   ['resumen','presencia','gastos','pagos','ajustes'].forEach(t => {
@@ -1178,10 +1236,20 @@ function armPlanPay(btn, fromId, toId, amount){
 /* saldar / congelar */
 function armSettle(btn, pid){
   if(btn.classList.contains('armed')){
+    // congelar el monto exacto que le toca en este momento
+    const r = compute();
+    const x = r.per[pid];
+    if(x){
+      const r2 = Math.round;
+      dbWrite('people/' + pid + '/frozen', {
+        emp: r2(x.emp*100)/100, gPooled: r2(x.gPooled*100)/100, gCustom: r2(x.gCustom*100)/100,
+        days: x.days, empBy: Object.fromEntries(Object.entries(x.empBy).map(([k,v]) => [k, r2(v*100)/100]))
+      });
+    }
     dbWrite('people/' + pid + '/settledAt', Date.now());
     dbWrite('people/' + pid + '/settledDate', toISO(new Date()));
     disarmAll();
-    toast('Cuenta congelada');
+    toast('Salida marcada — su cuenta quedó fija');
   } else {
     disarmAll(); btn.classList.add('armed'); btn.textContent = '¿Seguro? Los gastos nuevos ya no le tocarán';
     armTimer = setTimeout(disarmAll, 3000);
@@ -1190,7 +1258,36 @@ function armSettle(btn, pid){
 function reopenAccount(pid){
   dbWrite('people/' + pid + '/settledAt', null);
   dbWrite('people/' + pid + '/settledDate', null);
+  dbWrite('people/' + pid + '/frozen', null);
   toast('Cuenta reabierta');
+}
+/* para cuentas que ya salieron antes de esta versión (sin monto congelado): fijar lo que hoy le toca */
+function freezeNow(pid){
+  const r = compute();
+  const x = r.per[pid];
+  if(!x) return;
+  const r2 = Math.round;
+  dbWrite('people/' + pid + '/frozen', {
+    emp: r2(x.emp*100)/100, gPooled: r2(x.gPooled*100)/100, gCustom: r2(x.gCustom*100)/100,
+    days: x.days, empBy: Object.fromEntries(Object.entries(x.empBy).map(([k,v]) => [k, r2(v*100)/100]))
+  });
+  toast('Monto fijado');
+}
+/* marcar como saldada de una vez: fija lo que le toca en lo que ya puso (por si quedan centavos) */
+function forceSettle(pid){
+  const r = compute();
+  const x = r.per[pid];
+  if(!x) return;
+  const puso = x.paid + x.transfer;
+  const toca = x.emp + x.gPooled + x.gCustom;
+  const diff = puso - toca; // ajuste para que quede en cero
+  const r2 = Math.round;
+  dbWrite('people/' + pid + '/frozen', {
+    emp: r2(x.emp*100)/100, gPooled: r2((x.gPooled + diff)*100)/100, gCustom: r2(x.gCustom*100)/100,
+    days: x.days, empBy: Object.fromEntries(Object.entries(x.empBy).map(([k,v]) => [k, r2(v*100)/100]))
+  });
+  if(!x.settledAt){ dbWrite('people/' + pid + '/settledAt', Date.now()); dbWrite('people/' + pid + '/settledDate', toISO(new Date())); }
+  toast('Cuenta cerrada en cero');
 }
 /* borrar con doble toque */
 let armTimer = null;
@@ -1216,13 +1313,41 @@ function armDeletePerson(btn, pid){
     armTimer = setTimeout(disarmAll, 3000);
   }
 }
+/* guardar foto de solo lectura del período en el historial */
+function archivePeriod(){
+  const r = compute();
+  const c = state.config || {};
+  if(!r.days.length && !Object.keys(state.expenses||{}).length) return; // nada que archivar
+  const names = {}; r.people.forEach(p => names[p.id] = p.name);
+  const empName = to => {
+    if(to === '__ines') return 'Inés';
+    if(to && to.startsWith && to.startsWith('emp:')){ const e = r.employees.find(x => x.id === to.slice(4)); return e ? e.name : 'empleada'; }
+    return names[to] || 'fondo común';
+  };
+  const snap = {
+    start: c.start || null, end: c.end || null, archivedAt: Date.now(), archivedDate: toISO(new Date()),
+    totalGastos: Math.round(r.totalGastos*100)/100, totalEmp: Math.round(r.totalEmp*100)/100,
+    people: r.people.map(p => { const x = r.per[p.id]; return {
+      name: x.name, days: x.days,
+      toca: Math.round((x.emp + x.gPooled + x.gCustom)*100)/100,
+      puso: Math.round((x.paid + x.transfer)*100)/100,
+      net: Math.round(x.net*100)/100 }; }),
+    employees: r.employees.map(e => ({name:e.name, rate:e.rate, days:r.empWorkDays[e.id]||0, total:Math.round((r.empTotals[e.id]||0)*100)/100})),
+    expenses: Object.values(state.expenses||{}).sort((a,b)=>(a.ts||0)-(b.ts||0)).map(e => ({
+      desc:e.desc, amount:Number(e.amount||0), date:e.date||null, paidBy: e.paidBy ? (names[e.paidBy]||'—') : 'pendiente' })),
+    transfers: Object.values(state.payments||{}).sort((a,b)=>(a.ts||0)-(b.ts||0)).map(t => ({
+      from: names[t.from||t.pid]||'—', to: empName(t.to), amount:Number(t.amount||0), date:t.date||null, note:t.note||'' }))
+  };
+  dbWrite('history/' + newId(), snap);
+}
 function armReset(btn){
   if(btn.classList.contains('armed')){
+    archivePeriod();
     dbWrite('presence', null); dbWrite('expenses', null); dbWrite('payments', null);
     dbWrite('ines', null); dbWrite('empDays', null);
-    peopleArr().forEach(p => { if(p.settledAt){ dbWrite('people/' + p.id + '/settledAt', null); dbWrite('people/' + p.id + '/settledDate', null); } });
+    peopleArr().forEach(p => { if(p.settledAt || p.frozen){ dbWrite('people/' + p.id + '/settledAt', null); dbWrite('people/' + p.id + '/settledDate', null); dbWrite('people/' + p.id + '/frozen', null); } });
     selectedDetail = null;
-    disarmAll(); toast('Período reiniciado');
+    disarmAll(); toast('Período guardado en el historial y reiniciado');
   } else {
     btn.classList.add('armed'); btn.textContent = '¿Seguro? Toca otra vez para borrar todo';
     armTimer = setTimeout(disarmAll, 3000);
@@ -1232,7 +1357,7 @@ function disarmAll(){
   clearTimeout(armTimer);
   document.querySelectorAll('button.danger.armed, button.warnbtn.armed, button.armed').forEach(b => {
     b.classList.remove('armed');
-    if(b.id === 'resetBtn') b.textContent = 'Borrar datos del período';
+    if(b.id === 'resetBtn') b.textContent = 'Guardar en historial y empezar de nuevo';
     else if(b.classList.contains('warnbtn')) b.textContent = 'Marcar salida';
     else if(b.classList.contains('danger')) b.textContent = '✕';
     else { b.textContent = 'Registrar'; b.classList.add('ghost'); b.style.background = ''; b.style.color = ''; }
