@@ -366,15 +366,53 @@ function startCloud(){
   mode = 'cloud';
   firebase.initializeApp(FIREBASE_CONFIG);
   db = firebase.database();
-  db.ref(ROOT).on('value', snap => { state = snap.val() || {}; renderAll(); },
+  db.ref(ROOT).on('value', snap => { state = snap.val() || {}; autoFreezeLegacy(); renderAll(); },
     err => toast('Error de conexión: ' + err.message));
   showApp();
+}
+/* Migración: quien salió con una versión anterior (sin monto fijo) se congela automáticamente.
+   Si ya está saldado (o casi), se fija en lo que ya puso → queda en cero definitivo.
+   Si aún debe, se fija en lo que le toca hoy. */
+let freezing = false;
+function autoFreezeLegacy(){
+  if(freezing) return;
+  const legacy = peopleArr().filter(p => p.settledAt && !p.frozen);
+  if(!legacy.length) return;
+  freezing = true;
+  try {
+    const r = compute();
+    // parejas: si la pareja en conjunto ya saldó (transfirió "saldo del plan"), se cierra en cero toda la pareja
+    const unitOf = {};
+    r.groups.forEach(g => g.members.forEach(m => unitOf[m] = g.members));
+    const paidPlan = new Set(Object.values(state.payments||{}).filter(t => (t.note||'') === 'saldo del plan').map(t => t.from||t.pid));
+    legacy.forEach(p => {
+      const x = r.per[p.id]; if(!x) return;
+      const toca = x.emp + x.gPooled + x.gCustom;
+      const puso = x.paid + x.transfer;
+      const members = unitOf[p.id] || [p.id];
+      const unitToca = members.reduce((s,m) => s + r.per[m].emp + r.per[m].gPooled + r.per[m].gCustom, 0);
+      const unitPuso = members.reduce((s,m) => s + r.per[m].paid + r.per[m].transfer, 0);
+      const unitSettledViaPlan = members.some(m => paidPlan.has(m)) && members.every(m => peopleArr().find(q => q.id===m)?.settledAt);
+      // se cierra en cero si: ya pagó casi todo (<$5 de diferencia) o su unidad (pareja) saldó por el plan
+      const soloClose = Math.abs(puso - toca) < 5 && puso > 0;
+      const unitClose = unitSettledViaPlan && Math.abs(unitPuso - unitToca) < 5;
+      const closeEnough = soloClose || unitClose;
+      // ajuste: cada persona queda fijada exactamente en lo que puso → saldo cero (la pareja también suma cero)
+      const gPooled = closeEnough ? x.gPooled + (puso - toca) : x.gPooled;
+      const r2 = Math.round;
+      dbWrite('people/' + p.id + '/frozen', {
+        emp: r2(x.emp*100)/100, gPooled: r2(gPooled*100)/100, gCustom: r2(x.gCustom*100)/100,
+        days: x.days, empBy: Object.fromEntries(Object.entries(x.empBy).map(([k,v]) => [k, r2(v*100)/100])),
+        auto: 1
+      });
+    });
+  } finally { freezing = false; }
 }
 function startDemo(){ lsSet('bahia_demo','1'); startLocal(); }
 function startLocal(){
   mode = 'local';
   try { state = JSON.parse(lsGet('bahia_data') || '{}'); } catch(e){ state = {}; }
-  showApp(); renderAll();
+  showApp(); autoFreezeLegacy(); renderAll();
 }
 function dbWrite(path, value){
   if(mode === 'cloud'){
@@ -496,13 +534,15 @@ function compute(){
   let sinPagador = 0, unassignedPooled = 0;
   exps.forEach(e => {
     const amt = Number(e.amount || 0);
+    const ets = e.ts || 0;
     if(Array.isArray(e.split)){
-      const ids = e.split.filter(id => per[id]);
+      // entre personas elegidas: quien ya salió antes de que se registrara el gasto no entra
+      const ids = e.split.filter(id => per[id] && (!per[id].settledAt || per[id].settledAt > ets));
       if(ids.length){ const share = amt / ids.length; ids.forEach(id => per[id].gCustom += share); }
+      else unassignedPooled += amt;
     } else if(activeDays.length){
-      // entre todos: por día entre los presentes; quien ya congeló su cuenta no entra en gastos posteriores
+      // entre todos: por día entre los presentes; quien ya salió no entra en gastos posteriores
       const daily = amt / activeDays.length;
-      const ets = e.ts || 0;
       activeDays.forEach(d => {
         const elig = people.filter(p => isPresent(p.id, d) && (!p.settledAt || p.settledAt > ets));
         if(elig.length) elig.forEach(p => per[p.id].gPooled += daily / elig.length);
